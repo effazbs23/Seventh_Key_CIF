@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!--
+        Template model: sale.order
+        Dynamic values injected via context when opening mail.compose.message:
+            cif_update_link  – the secure one-time CIF update URL
+        The template is rendered against the Sale Order record, so all
+        object.* expressions refer to sale.order fields.
+    -->
+    <record id="email_template_cif_change_request" model="mail.template">
+        <field name="name">CIF Change Request</field>
+        <field name="model_id" ref="sale.model_sale_order"/>
+        <field name="subject">{{ object.name or 'Sale Order' }}: CIF Update Link</field>
+        <field name="body_html" type="html">
+            <div style="font-family: Arial, sans-serif; font-size: 13px;">
+                <p>Dear <t t-out="object.partner_id.name or ''"/>,</p>
+                <p>
+                    Please use the link below to update your Client Information Form (CIF) for order
+                    <strong><t t-out="object.name or ''"/></strong>.
+                </p>
+                <p style="margin: 16px 0px; text-align: center;">
+                    <a t-attf-href="{{ ctx.get('cif_update_link') or '' }}"
+                       style="background-color: #875A7B; color: #FFFFFF; padding: 10px 20px; text-decoration: none; border-radius: 5px;">
+                        Update CIF Details
+                    </a>
+                </p>
+                <p><strong>Note:</strong> Email and Share Percentage are locked and cannot be changed through this link.</p>
+                <p style="margin-top: 20px;">Thank you,<br/>
+                    <t t-out="object.company_id.name or ''"/>
+                </p>
+            </div>
+        </field>
+        <field name="auto_delete" eval="True"/>
+    </record>
+</odoo>

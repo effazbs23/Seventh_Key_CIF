@@ -1,0 +1,71 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data>
+        <!-- Phone OTP list View -->
+        <record id="view_phone_otp_list" model="ir.ui.view">
+            <field name="name">phone.otp.list</field>
+            <field name="model">phone.otp</field>
+            <field name="arch" type="xml">
+                <list string="Phone OTPs">
+                    <field name="phone_number"/>
+                    <field name="field_type"/>
+                    <field name="is_verified"/>
+                    <field name="expiry_time"/>
+                    <field name="attempts"/>
+                    <field name="created_date"/>
+                    <field name="cif_form_id"/>
+                </list>
+            </field>
+        </record>
+
+        <!-- Phone OTP Form View -->
+        <record id="view_phone_otp_form" model="ir.ui.view">
+            <field name="name">phone.otp.form</field>
+            <field name="model">phone.otp</field>
+            <field name="arch" type="xml">
+                <form string="Phone OTP">
+                    <sheet>
+                        <group>
+                            <group>
+                                <field name="phone_number"/>
+                                <field name="field_type"/>
+                                <field name="otp_code" readonly="1"/>
+                                <field name="is_verified"/>
+                            </group>
+                            <group>
+                                <field name="expiry_time"/>
+                                <field name="attempts"/>
+                                <field name="max_attempts"/>
+                                <field name="created_date"/>
+                                <field name="cif_form_id"/>
+                            </group>
+                        </group>
+                    </sheet>
+                </form>
+            </field>
+        </record>
+
+        <!-- Phone OTP Action -->
+        <record id="action_phone_otp" model="ir.actions.act_window">
+            <field name="name">Phone OTPs</field>
+            <field name="res_model">phone.otp</field>
+            <field name="view_mode">list,form</field>
+            <field name="help" type="html">
+                <p class="o_view_nocontent_smiling_face">
+                    No phone OTP records found.
+                </p>
+                <p>
+                    This view shows all phone number verification OTP records.
+                    OTP records are automatically cleaned up after expiration.
+                </p>
+            </field>
+        </record>
+
+        <!-- Phone OTP Menu -->
+        <menuitem id="menu_phone_otp"
+                  name="Phone OTPs"
+                  parent="base.menu_administration"
+                  action="action_phone_otp"
+                  sequence="99"/>
+    </data>
+</odoo>

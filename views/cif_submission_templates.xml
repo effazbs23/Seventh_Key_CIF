@@ -1,0 +1,128 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data>
+        <!-- Thank You Page for Individual CIF Form Submission -->
+        <template id="cif_individual_thank_you_template" name="CIF Individual Thank You">
+            <t t-call="website.layout">
+                <div id="wrap" class="oe_structure">
+                    <div class="container my-5">
+                        <div class="row">
+                            <div class="col-lg-8 mx-auto">
+                                <div class="d-flex justify-content-center mb-4">
+                                    <img src="/seventh_key_custom/static/src/img/7th-key.png" alt="Logo"
+                                         style="height:110px; width:auto;"/>
+                                </div>
+
+                                <div class="text-center bg-light p-5 rounded shadow-sm">
+                                    <h1 class="display-4 text-success mb-4">
+                                        <i class="fa fa-check-circle"></i> Thank You!
+                                    </h1>
+                                    <p class="lead mb-4">Your information has been submitted successfully.</p>
+                                    <hr class="my-4"/>
+                                    <p class="text-muted">
+                                        We will review your submission and get in touch if any further information is required.
+                                    </p>
+                                    <p class="text-muted mt-3">
+                                        <small>Order Reference: <strong><t t-esc="sale_order_name"/></strong></small>
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </t>
+        </template>
+
+        <!-- Form Already Submitted Page -->
+        <template id="cif_form_already_submitted_template" name="CIF Form Already Submitted">
+            <t t-call="website.layout">
+                <div id="wrap" class="oe_structure">
+                    <div class="container my-5">
+                        <div class="row">
+                            <div class="col-lg-8 mx-auto">
+                                <div class="d-flex justify-content-center mb-4">
+                                    <img src="/seventh_key_custom/static/src/img/7th-key.png" alt="Logo"
+                                         style="height:110px; width:auto;"/>
+                                </div>
+                                <div class="text-center bg-light p-5 rounded shadow-sm">
+                                    <h1 class="display-4 text-muted mb-4">
+                                        <i class="fa fa-ban"></i> Access Link Expired
+                                    </h1>
+                                    <p class="lead">This link is no longer valid.</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </t>
+        </template>
+
+        <!-- Error Template for CIF Form Submission -->
+        <template id="cif_form_error_template" name="CIF Form Error">
+            <t t-call="website.layout">
+                <div id="wrap" class="oe_structure">
+                    <div class="container my-5">
+                        <div class="row">
+                            <div class="col-lg-8 mx-auto">
+                                <div class="d-flex justify-content-center mb-4">
+                                    <img src="/seventh_key_custom/static/src/img/7th-key.png" alt="Logo"
+                                         style="height:110px; width:auto;"/>
+                                </div>
+                                <div class="text-center bg-light p-5 rounded shadow-sm">
+                                    <h1 class="display-4 text-danger mb-4">
+                                        <i class="fa fa-exclamation-triangle"></i> Error
+                                    </h1>
+                                    <p class="lead mb-4"><t t-esc="error_message or 'An error occurred while processing your submission.'"/></p>
+                                    <hr class="my-4"/>
+                                    <p class="text-muted">
+                                        Please contact support if this issue persists.
+                                    </p>
+                                    <t t-if="sale_order_name">
+                                        <p class="text-muted mt-3">
+                                            <small>Order Reference: <strong><t t-esc="sale_order_name"/></strong></small>
+                                        </p>
+                                    </t>
+                                    <a href="javascript:history.back()" class="btn btn-primary mt-3">
+                                        <i class="fa fa-arrow-left"></i> Go Back
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </t>
+        </template>
+
+        <!-- Thank You Page for Company CIF Form Submission -->
+        <template id="cif_company_thank_you_template" name="CIF Company Thank You">
+            <t t-call="website.layout">
+                <div id="wrap" class="oe_structure">
+                    <div class="container my-5">
+                        <div class="row">
+                            <div class="col-lg-8 mx-auto">
+                                <div class="d-flex justify-content-center mb-4">
+                                    <img src="/seventh_key_custom/static/src/img/7th-key.png" alt="Logo"
+                                         style="height:110px; width:auto;"/>
+                                </div>
+
+                                <div class="text-center bg-light p-5 rounded shadow-sm">
+                                    <h1 class="display-4 text-success mb-4">
+                                        <i class="fa fa-check-circle"></i> Thank You!
+                                    </h1>
+                                    <p class="lead mb-4">Your company's information has been submitted successfully.</p>
+                                    <hr class="my-4"/>
+                                    <p class="text-muted">
+                                        We will review your submission and get in touch if any further information is required.
+                                    </p>
+                                    <p class="text-muted mt-3">
+                                        <small>Order Reference: <strong><t t-esc="sale_order_name"/></strong></small>
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </t>
+        </template>
+    </data>
+</odoo>

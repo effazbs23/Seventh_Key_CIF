@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data>
+        <!-- ============================================================ -->
+        <!-- == Change CIF: Step 1 - Email verification (email match)   == -->
+        <!-- ============================================================ -->
+        <template id="cif_change_email_verify_template" name="CIF Change - Verify Email">
+            <t t-call="website.layout">
+                <div id="wrap" class="oe_structure">
+                    <div class="container my-5">
+                        <div class="row">
+                            <div class="col-lg-8 mx-auto">
+                                <div class="d-flex justify-content-center mb-4">
+                                    <img src="/seventh_key_custom/static/src/img/7th-key.png" alt="Logo" style="height:110px; width:auto;"/>
+                                </div>
+
+                                <div class="bg-light p-5 rounded shadow-sm">
+                                    <h1 class="h3 mb-3 text-center">Verify your email</h1>
+
+                                    <t t-if="masked_email">
+                                        <p class="text-center text-muted mb-4">
+                                            Previously Provided Email: <strong><t t-esc="masked_email"/></strong>
+                                        </p>
+                                    </t>
+
+                                    <t t-if="error_message">
+                                        <div class="alert alert-danger" role="alert">
+                                            <t t-esc="error_message"/>
+                                        </div>
+                                    </t>
+
+                                    <form action="/client-information-form/change/verify-email" method="POST" class="mt-3">
+                                        <input type="hidden" name="csrf_token" t-att-value="request.csrf_token()"/>
+                                        <input type="hidden" name="token" t-att-value="token"/>
+                                        <input type="hidden" name="step_token" t-att-value="step_token"/>
+
+                                        <div class="form-group">
+                                            <label class="col-form-label" for="email_input">Enter your email address to continue</label>
+                                            <input type="email" class="form-control" id="email_input" name="email_input" required="required" autocomplete="email"/>
+                                        </div>
+
+                                        <div class="text-center mt-4">
+                                            <button class="btn btn-primary" type="submit">Verify Email</button>
+                                        </div>
+                                    </form>
+                                </div>
+
+                                <t t-if="sale_order_name">
+                                    <p class="text-center text-muted mt-3">
+                                        <small>Order Reference: <strong><t t-esc="sale_order_name"/></strong></small>
+                                    </p>
+                                </t>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </t>
+        </template>
+    </data>
+</odoo>

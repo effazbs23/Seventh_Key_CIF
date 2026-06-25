@@ -1,0 +1,2104 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data>
+
+        <!-- ================================================================= -->
+        <!-- ==          THE MAIN CLIENT INFORMATION WEB FORM TEMPLATE        == -->
+        <!-- ================================================================= -->
+        <template id="cif_form_template" name="Client Information Form">
+            <t t-call="website.layout">
+                <div id="wrap" class="oe_structure">
+                    <div class="container my-5">
+                        <div class="row">
+                            <div class="col-lg-10 mx-auto">
+                                <div class="d-flex justify-content-between align-items-center mb-4">
+                                    <!-- Increased logo height from 70px to 110px for consistency -->
+                                    <img src="/seventh_key_custom/static/src/img/7th-key.png" alt="Logo"
+                                         style="height:110px; width:auto;"/>
+                                </div>
+
+                                <h1 class="text-center"><t t-if="is_change_mode">CHANGE OF CUSTOMER INFORMATION FORM</t><t t-else="">Client Information Form</t></h1>
+                                <p class="text-center text-muted mb-4"><t t-if="is_change_mode">Please update the stored CIF data for order <t t-esc="sale_order.name"/></t><t t-else="">Please complete the details below for order <t t-esc="sale_order.name"/></t></p>
+
+                                <div t-if="sale_order">
+                                    <form t-att-action="'/cif/submit/change' if is_change_mode else '/cif/submit/individual/cif.form'"
+                                          method="POST" class="form-horizontal" enctype="multipart/form-data"
+                                          data-success-mode="message">
+
+                                        <input type="hidden" name="csrf_token" t-att-value="request.csrf_token()"/>
+                                        <t t-if="is_change_mode">
+                                            <input type="hidden" name="change_token" t-att-value="change_token"/>
+                                            <input type="hidden" name="change_step_token" t-att-value="change_step_token"/>
+                                        </t>
+                                        <t t-else="">
+                                            <input type="hidden" name="cif_token" t-att-value="cif_request_session.cif_token"/>
+                                        </t>
+
+                                        <!-- These values are dynamic and don't need defaults -->
+                                        <p>
+                                            <strong>CIF No.:</strong>
+                                            <t t-esc="cif_no"/>
+                                        </p>
+                                        <p>
+                                            <strong>Date:</strong>
+                                            <t t-esc="date"/>
+                                        </p>
+
+                                        <!-- == CLIENT DETAILS SECTION == -->
+                                        <h3 class="mt-5 mb-3 border-bottom pb-2">CLIENT INFORMATION</h3>
+                                        <div class="row">
+                                            <div class="form-group col-lg-4 s_website_form_field s_website_form_required" data-name="First Name">
+                                                <label class="col-form-label s_website_form_label" for="first_name">
+                                                    First Name<span class="s_website_form_mark"> *</span>
+                                                </label>
+                                                <input type="text" class="form-control" name="first_name" required="required"
+                                                       t-att-value="existing_cif.first_name if is_change_mode and existing_cif else ''"/>
+                                            </div>
+                                            <div class="form-group col-lg-4 s_website_form_field">
+                                                <label class="col-form-label s_website_form_label" for="middle_name">Middle Name</label>
+                                                <input type="text" class="form-control" name="middle_name"
+                                                       t-att-value="existing_cif.middle_name if is_change_mode and existing_cif else ''"/>
+                                            </div>
+                                            <div class="form-group col-lg-4 s_website_form_field s_website_form_required" data-name="Last Name">
+                                                <label class="col-form-label s_website_form_label" for="last_name">
+                                                    Last Name<span class="s_website_form_mark"> *</span>
+                                                </label>
+                                                <input type="text" class="form-control" name="last_name" required="required"
+                                                       t-att-value="existing_cif.last_name if is_change_mode and existing_cif else ''"/>
+                                            </div>
+                                        </div>
+
+                                         <!-- UAE Residency Status - Hidden in change mode -->
+                                         <t t-if="not is_change_mode">
+                                         <div class="form-group s_website_form_field s_website_form_required" data-name="UAE Residency Status">
+                                            <label class="col-form-label s_website_form_label">
+                                                UAE Residency Status<span class="s_website_form_mark"> *</span>
+                                            </label>
+                                            <div class="s_website_form_multiple">
+                                                <div class="form-check form-check-inline">
+                                                    <input type="radio" id="resident_radio" name="uae_residency_status"
+                                                           class="form-check-input" value="resident" required="required"
+                                                           checked="checked"/>
+                                                    <label class="form-check-label" for="resident_radio">Resident
+                                                    </label>
+                                                </div>
+                                                <div class="form-check form-check-inline">
+                                                    <input type="radio" id="non_resident_radio"
+                                                           name="uae_residency_status" class="form-check-input"
+                                                           value="non_resident" required="required"/>
+                                                    <label class="form-check-label" for="non_resident_radio">Non
+                                                        Resident
+                                                    </label>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        </t>
+
+                                        <!-- Dynamic fields based on UAE Residency Status -->
+                                        <div class="row" id="residency_fields">
+                                            <div class="form-group col-lg-6 residency_field" id="passport_field">
+                                                <label class="col-form-label s_website_form_label" for="passport_no">
+                                                    Passport No. <span class="s_website_form_mark"> *</span>
+                                                </label>
+                                                <input type="text" class="form-control" name="passport_no" id="passport_no" required="required"
+                                                       t-att-value="existing_partner.passport_no if is_change_mode and existing_partner else ''"/>
+                                            </div>
+                                            <!-- Emirates ID Row -->
+                                            <div class="form-group col-lg-6 residency_field" id="emirates_id_field">
+                                                <label class="col-form-label s_website_form_label" for="emirates_id">
+                                                    Emirates ID No. <span class="s_website_form_mark resident-required"> *</span>
+                                                </label>
+                                                <input type="text" class="form-control" name="emirates_no" id="emirates_id"
+                                                       t-att-value="existing_partner.emirates_no if is_change_mode and existing_partner else ''"/>
+                                            </div>
+                                        </div>
+
+                                        <!-- Passport Row -->
+                                        <!-- <div class="row" id="residency_fields_passport">
+
+                                        </div> -->
+
+                                        <div class="row">
+                                            <div class="form-group col-lg-4 s_website_form_field s_website_form_required" data-name="Nationality">
+                                                <label class="col-form-label s_website_form_label" for="nationality_id">
+                                                    Nationality<span class="s_website_form_mark"> *</span>
+                                                </label>
+                                                <select name="nationality_id" class="form-control" required="required">
+                                                    <option value="">Select a country...</option>
+                                                    <t t-foreach="countries" t-as="country">
+                                                        <option t-att-value="country.id"
+                                                                t-att-selected="(is_change_mode and existing_cif and existing_cif.nationality_id and country.id == existing_cif.nationality_id.id) or (not is_change_mode and country.name == 'United Arab Emirates')">
+                                                            <t t-esc="country.name"/>
+                                                        </option>
+                                                    </t>
+                                                </select>
+                                            </div>
+                                            <!-- Email Field - Different behavior for initial vs change mode -->
+                                            <t t-if="is_change_mode">
+                                                <!-- CHANGE MODE: Show old email as readonly -->
+                                                <div class="form-group col-lg-6 s_website_form_field s_website_form_required" data-name="Current Email">
+                                                    <label class="col-form-label s_website_form_label" for="email_current">
+                                                        Current Email<span class="s_website_form_mark"> *</span>
+                                                    </label>
+                                                    <input type="email" class="form-control" name="email_current" id="email_current" readonly="readonly"
+                                                           t-att-value="existing_partner.email if existing_partner else ''"
+                                                           style="background-color: #e9ecef; cursor: not-allowed;"/>
+                                                    <small class="form-text text-muted">This is your registered email address</small>
+                                                </div>
+
+                                                <!-- CHANGE MODE: Optional new email field with verification -->
+                                                <div class="form-group col-lg-6 s_website_form_field" data-name="New Email">
+                                                    <label class="col-form-label s_website_form_label" for="new_email">
+                                                        New Email
+                                                    </label>
+                                                    <div class="input-group">
+                                                        <input type="email" class="form-control" name="new_email" id="new_email" placeholder="Enter new email if you want to change"/>
+                                                        <button type="button" class="btn btn-outline-primary" id="btn_verify_new_email" onclick="sendNewEmailOTP()" style="display: none;">
+                                                            Verify
+                                                        </button>
+                                                        <div class="input-group-append verification-status" id="new_email_verified" style="display: none;">
+                                                            <span class="input-group-text bg-success text-white">
+                                                                <i class="fa fa-check"> </i> Verified
+                                                            </span>
+                                                        </div>
+                                                    </div>
+                                                    <small class="form-text text-muted">Leave blank to keep current email</small>
+
+                                                    <!-- OTP verification for new email -->
+                                                    <div class="otp-input-section" id="new_email_otp_section" style="display: none; margin-top: 10px;">
+                                                        <div class="input-group">
+                                                            <input type="text" class="form-control" placeholder="Enter 6-digit code" id="new_email_otp_code" maxlength="6"/>
+                                                            <button type="button" class="btn btn-primary" onclick="verifyNewEmailOTP()">
+                                                                Submit
+                                                            </button>
+                                                        </div>
+                                                        <div class="mt-2">
+                                                            <small class="text-muted">Enter the code sent to your new email</small>
+                                                            <div class="resend-section">
+                                                                <button type="button" class="btn btn-link btn-sm p-0" id="resend_new_email" onclick="resendNewEmailOTP()" style="display: none; color: #007bff; font-weight: bold;">
+                                                                    Resend Code
+                                                                </button>
+                                                                <small id="resend_new_email_timer" class="text-muted"> </small>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </t>
+
+                                            <!-- INITIAL MODE: Regular email field with verification -->
+                                            <t t-else="">
+                                                <div class="form-group col-lg-6 s_website_form_field s_website_form_required" data-name="Email">
+                                                    <label class="col-form-label s_website_form_label" for="email">
+                                                        Email<span class="s_website_form_mark"> *</span>
+                                                    </label>
+                                                    <div class="input-group">
+                                                        <input type="email" class="form-control" name="email" id="email" required="required"/>
+                                                        <button type="button" class="btn btn-outline-primary" id="btn_verify_email" onclick="sendEmailOTP('email')">
+                                                            Verify
+                                                        </button>
+                                                        <div class="input-group-append verification-status" id="email_verified" style="display: none;">
+                                                            <span class="input-group-text bg-success text-white">
+                                                                <i class="fa fa-check"> </i> Verified
+                                                            </span>
+                                                        </div>
+                                                    </div>
+                                                    <div class="otp-input-section" id="email_otp_section" style="display: none; margin-top: 10px;">
+                                                        <div class="input-group">
+                                                            <input type="text" class="form-control" placeholder="Enter verification code" id="email_otp_code" maxlength="6"/>
+                                                            <button type="button" class="btn btn-primary" onclick="verifyEmailOTP('email')">
+                                                                Submit
+                                                            </button>
+                                                        </div>
+                                                        <div class="mt-2">
+                                                            <small class="text-muted">Enter the 6-digit code sent to your email</small>
+                                                            <div class="resend-section">
+                                                                <button type="button" class="btn btn-link btn-sm p-0" id="resend_email" onclick="resendEmailOTP('email')" style="display: none; color: #007bff; font-weight: bold;">
+                                                                    Resend Code
+                                                                </button>
+                                                                <small id="resend_email_timer" class="text-muted"> </small>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </t>
+                                        </div>
+
+                                        <div class="row">
+                                            <!-- <div class="form-group col-lg-6 s_website_form_field">
+                                                <label class="col-form-label s_website_form_label" for="email_address">Alt Email</label>
+                                                <div class="input-group">
+                                                    <input type="email" class="form-control" name="email_address" id="email_address"/>
+                                                </div> -->
+
+                                                <!-- Removed Alt Email OTP verification UI -->
+                                                <!-- <div class="otp-input-section" id="email_address_otp_section" style="display: none; margin-top: 10px;"> -->
+<!--                                                    <div class="input-group">-->
+<!--                                                        <input type="text" class="form-control" placeholder="Enter verification code" id="email_address_otp_code" maxlength="6"/>-->
+<!--                                                        <button type="button" class="btn btn-primary" onclick="verifyEmailOTP('email_address')">-->
+<!--                                                            Submit-->
+<!--                                                        </button>-->
+<!--                                                    </div>-->
+<!--                                                    <div class="mt-2">-->
+<!--                                                        <small class="text-muted">Enter the 6-digit code sent to your email</small>-->
+<!--                                                        <div class="resend-section">-->
+<!--                                                            <button type="button" class="btn btn-link btn-sm p-0" id="resend_email_address" onclick="resendEmailOTP('email_address')" style="display: none; color: #007bff; font-weight: bold;">-->
+<!--                                                                Resend Code-->
+<!--                                                            </button>-->
+<!--                                                            <small id="resend_email_address_timer" class="text-muted"> </small>-->
+<!--                                                        </div>-->
+<!--                                                    </div>-->
+<!--                                                </div> -->
+
+                                            <!-- </div> -->
+                                        </div>
+
+                                        <div class="row">
+                                            <div t-att-class="'form-group s_website_form_field s_website_form_required' if not is_change_mode else 'form-group col-lg-12 s_website_form_field s_website_form_required'" data-name="Mobile No.">
+                                                <label class="col-form-label s_website_form_label" for="mobile">
+                                                    Mobile No.<span class="s_website_form_mark"> *</span>
+                                                </label>
+                                                <input type="tel" class="form-control" name="mobile" required="required"
+                                                       t-att-value="existing_partner.mobile if is_change_mode and existing_partner else ''"/>
+                                            </div>
+                                            <!-- Alt. Mobile No. - Hidden in change mode -->
+                                            <t t-if="not is_change_mode">
+                                            <div class="form-group col-lg-6 s_website_form_field">
+                                                <label class="col-form-label s_website_form_label" for="phone">
+                                                    Alt. Mobile No.
+                                                </label>
+                                                <input type="tel" class="form-control" name="phone"
+                                                       t-att-value="existing_partner.phone if is_change_mode and existing_partner else ''"/>
+                                            </div>
+                                            </t>
+                                        </div>
+
+                                        <!-- Date of Birth and Gender - Hidden in change mode -->
+                                        <t t-if="not is_change_mode">
+                                        <div class="row">
+                                            <div class="form-group col-lg-6 s_website_form_field s_website_form_required" data-name="Date of Birth">
+                                                <label class="col-form-label s_website_form_label" for="date_of_birth">
+                                                    Date of Birth<span class="s_website_form_mark"> *</span>
+                                                </label>
+                                                <input type="date" class="form-control" name="date_of_birth" required="required"/>
+                                            </div>
+                                            <div class="form-group col-lg-6 s_website_form_field" data-name="Gender">
+                                                <label class="col-form-label s_website_form_label" for="gender">
+                                                    Gender
+                                                </label>
+                                                <select name="gender" class="form-control">
+                                                    <option value="">Select gender...</option>
+                                                    <option value="male">Male</option>
+                                                    <option value="female">Female</option>
+                                                    <option value="other">Other</option>
+                                                </select>
+                                            </div>
+                                        </div>
+                                        </t>
+
+                                        <!-- == SECURITY QUESTIONS SECTION - Hidden in change mode == -->
+                                        <t t-if="not is_change_mode">
+                                        <!-- <h3 class="mt-5 mb-3 border-bottom pb-2">SECURITY QUESTIONS</h3> -->
+                                        <div id="security_questions_section">
+                                            <!-- Security Question 1 -->
+                                            <div class="form-group s_website_form_field s_website_form_required" data-name="Security Question 1">
+                                                <label class="col-form-label s_website_form_label" for="security_question_1">
+                                                    Security Question 1 <span class="s_website_form_mark"> *</span>
+                                                </label>
+                                                <select id="security_question_1" name="security_question_1" class="form-control security-question-select" required="required">
+                                                    <option value="">Select a security question...</option>
+                                                    <t t-foreach="security_questions" t-as="q">
+                                                        <option t-att-value="q['id']" t-att-data-maxlength="q['ans_max_length']" t-att-selected="is_change_mode and existing_security.get(1) and existing_security.get(1)['question_id'] == q['id']">
+                                                            <t t-esc="q['question']"/>
+                                                        </option>
+                                                    </t>
+                                                </select>
+                                                <input type="text" id="security_answer_1" name="security_answer_1" class="form-control mt-2 security-answer" placeholder="Your Answer" required="required" maxlength="255" t-att-value="is_change_mode and existing_security.get(1) and existing_security.get(1)['answer'] or ''"/>
+                                                <small class="form-text text-muted">Maximum <span id="maxlength_1">255</span> characters</small>
+                                            </div>
+
+                                            <!-- Security Question 2 -->
+                                            <div class="form-group s_website_form_field s_website_form_required" data-name="Security Question 2">
+                                                <label class="col-form-label s_website_form_label" for="security_question_2">
+                                                    Security Question 2 <span class="s_website_form_mark"> *</span>
+                                                </label>
+                                                <select id="security_question_2" name="security_question_2" class="form-control security-question-select" required="required">
+                                                    <option value="">Select a security question...</option>
+                                                    <t t-foreach="security_questions" t-as="q">
+                                                        <option t-att-value="q['id']" t-att-data-maxlength="q['ans_max_length']" t-att-selected="is_change_mode and existing_security.get(2) and existing_security.get(2)['question_id'] == q['id']">
+                                                            <t t-esc="q['question']"/>
+                                                        </option>
+                                                    </t>
+                                                </select>
+                                                <input type="text" id="security_answer_2" name="security_answer_2" class="form-control mt-2 security-answer" placeholder="Your Answer" required="required" maxlength="255" t-att-value="is_change_mode and existing_security.get(2) and existing_security.get(2)['answer'] or ''"/>
+                                                <small class="form-text text-muted">Maximum <span id="maxlength_2">255</span> characters</small>
+                                            </div>
+
+                                            <!-- Security Question 3 -->
+                                            <div class="form-group s_website_form_field s_website_form_required" data-name="Security Question 3">
+                                                <label class="col-form-label s_website_form_label" for="security_question_3">
+                                                    Security Question 3 <span class="s_website_form_mark"> *</span>
+                                                </label>
+                                                <select id="security_question_3" name="security_question_3" class="form-control security-question-select" required="required">
+                                                    <option value="">Select a security question...</option>
+                                                    <t t-foreach="security_questions" t-as="q">
+                                                        <option t-att-value="q['id']" t-att-data-maxlength="q['ans_max_length']" t-att-selected="is_change_mode and existing_security.get(3) and existing_security.get(3)['question_id'] == q['id']">
+                                                            <t t-esc="q['question']"/>
+                                                        </option>
+                                                    </t>
+                                                </select>
+                                                <input type="text" id="security_answer_3" name="security_answer_3" class="form-control mt-2 security-answer" placeholder="Your Answer" required="required" maxlength="255" t-att-value="is_change_mode and existing_security.get(3) and existing_security.get(3)['answer'] or ''"/>
+                                                <small class="form-text text-muted">Maximum <span id="maxlength_3">255</span> characters</small>
+                                            </div>
+                                        </div>
+                                        </t>
+                                        <!-- End Security Questions Section -->
+
+                                        <!-- == CLIENT ADDRESS SECTION == -->
+                                        <h3 class="mt-5 mb-3 border-bottom pb-2">ADDRESS DETAILS</h3>
+                                        <div class="row">
+                                            <div class="form-group col-lg-4 s_website_form_field s_website_form_required" data-name="Unit / Villa No.">
+                                                <label class="col-form-label s_website_form_label" for="unit_villa_no">
+                                                    Unit / Villa No.<span class="s_website_form_mark"> *</span>
+                                                </label>
+                                                <input type="text" class="form-control" name="unit_villa_no" required="required"
+                                                       t-att-value="existing_cif.unit_villa_no if is_change_mode and existing_cif else ''"/>
+                                            </div>
+                                            <div class="form-group col-lg-4 s_website_form_field" data-name="Building Name">
+                                                <label class="col-form-label s_website_form_label" for="building_name">
+                                                    Building Name
+                                                </label>
+                                                <input type="text" class="form-control" name="building_name"
+                                                       t-att-value="existing_cif.building_name if is_change_mode and existing_cif else ''"/>
+                                            </div>
+<!--                                            <div class="form-group col-lg-4 s_website_form_field s_website_form_required" data-type="many2one" data-name="Mode of Payment"-->
+<!--                                                 data-model="account.payment.method.line">-->
+<!--                                                <label class="col-form-label s_website_form_label" for="payment_method_line_id">-->
+<!--                                                    Mode of Payment<span class="s_website_form_mark"> *</span>-->
+<!--                                                </label>-->
+<!--                                                <select name="payment_method_line_id" class="form-control" required="required">-->
+<!--                                                    <option value="">Select a payment method...</option>-->
+<!--                                                    <t t-foreach="payment_methods" t-as="method">-->
+<!--                                                        <option t-att-value="method.id"-->
+<!--                                                                t-att-selected="method.name == 'Bank Transfer'">-->
+<!--                                                            <t t-esc="'%s (%s)' % (method.name, method.journal_id.name)"/>-->
+<!--                                                        </option>-->
+<!--                                                    </t>-->
+<!--                                                </select>-->
+<!--                                            </div>-->
+
+                                        </div>
+                                        <div class="form-group s_website_form_field s_website_form_required" data-name="Street Name">
+                                            <label class="col-form-label s_website_form_label" for="street_name">
+                                                Street Name<span class="s_website_form_mark"> *</span>
+                                            </label>
+                                            <input type="text" class="form-control" name="street_name" required="required"
+                                                   t-att-value="existing_partner.street if is_change_mode and existing_partner else ''"/>
+                                        </div>
+                                        <div class="row">
+                                            <div class="form-group col-lg-3 s_website_form_field s_website_form_required" data-name="City">
+                                                <label class="col-form-label s_website_form_label" for="city">
+                                                    City<span class="s_website_form_mark"> *</span>
+                                                </label>
+                                                <input type="text" class="form-control" name="city" required="required"
+                                                       t-att-value="existing_partner.city if is_change_mode and existing_partner else ''"/>
+                                            </div>
+                                            <div class="form-group col-lg-3 s_website_form_field" data-name="Postal Code">
+                                                <label class="col-form-label s_website_form_label" for="postal_code">
+                                                    P.O. Box / Zip Code
+                                                </label>
+                                                <input type="text" class="form-control" name="postal_code"
+                                                       t-att-value="existing_partner.zip if is_change_mode and existing_partner else ''"/>
+                                            </div>
+                                            <!-- <div class="form-group col-lg-3 s_website_form_field" data-name="P.O. Box">
+                                                <label class="col-form-label s_website_form_label" for="po_box">
+                                                    P.O. Box
+                                                </label>
+                                                <input type="text" class="form-control" name="po_box"/>
+                                            </div> -->
+                                            <div class="form-group col-lg-3 s_website_form_field s_website_form_required" data-name="Country">
+                                                <label class="col-form-label s_website_form_label" for="country_id">
+                                                    Country<span class="s_website_form_mark"> *</span>
+                                                </label>
+                                                <select name="country_id" class="form-control" required="required">
+                                                    <option value="">Select a country...</option>
+                                                    <t t-foreach="countries" t-as="country">
+                                                        <option t-att-value="country.id"
+                                                                t-att-selected="(is_change_mode and existing_partner and existing_partner.country_id and country.id == existing_partner.country_id.id) or (not is_change_mode and country.name == 'United Arab Emirates')">
+                                                            <t t-esc="country.name"/>
+                                                        </option>
+                                                    </t>
+                                                </select>
+                                            </div>
+                                        </div>
+
+                                        <!-- PROPERTY DETAILS - Hidden in change mode -->
+                                        <t t-if="not is_change_mode">
+                                        <h3 class="mt-5 mb-3 border-bottom pb-2">PROPERTY DETAILS</h3>
+                                        <div class="row">
+                                            <div class="form-group col-lg-4 s_website_form_field s_website_form_required" data-name="Unit No.">
+                                                <label class="col-form-label s_website_form_label" for="unit_no">
+                                                    Unit no<span class="s_website_form_mark"> *</span>
+                                                </label>
+                                                <input type="text" class="form-control" name="unit_no"
+                                                       readonly="readonly"
+                                                       t-att-value="unit_no"/>
+                                            </div>
+                                            <div class="form-group col-lg-6 s_website_form_field s_website_form_required" data-name="Payment Plan">
+                                                <label class="col-form-label s_website_form_label" for="payment_plan">
+                                                    Payment Plan
+                                                </label>
+                                                <select name="payment_plan" class="form-control" disabled="disabled">
+                                                    <option value="">Select a payment plan...</option>
+                                                    <t t-foreach="payment_plans" t-as="plan">
+                                                        <option
+                                                                t-att-selected="sale_order.installment_option_custom and sale_order.installment_option_custom.id == plan.id">
+                                                            <t t-esc="plan.name"/>
+                                                        </option>
+                                                    </t>
+                                                </select>
+                                            </div>
+                                        </div>
+
+                                        <div class="row">
+                                            <div class="form-group col-lg-4 s_website_form_field s_website_form_required" data-name="Shareholder %">
+                                                <label class="col-form-label s_website_form_label" for="shareholder_percentage">
+                                                    Shareholder %
+                                                    <span class="s_website_form_mark"> *</span>
+                                                </label>
+                                                <input type="number" step="0.01" min="0" max="100" class="form-control"
+                                                       name="shareholder_percentage" id="shareholder_percentage" required="required"
+                                                       t-att-value="prefill_share_percentage if is_change_mode else max_share_percentage"
+                                                       t-att-readonly="'readonly' if is_change_mode else None"
+                                                       t-att-data-required-percentage="max_share_percentage"
+                                                       placeholder="Enter shareholder percentage"/>
+                                                <small class="form-text text-muted d-block mt-2">
+                                                    <strong>Max allowed: <span class="text-primary" id="required_percentage_display" t-esc="max_share_percentage"/>%</strong>
+                                                </small>
+                                                <div id="shareholder_percentage_error" class="text-danger mt-2 d-none" style="font-size: 0.9rem; font-weight: 500;">
+                                                </div>
+                                            </div>
+                                            <div id="preffered_payment_type" class="form-group col-lg-4 s_website_form_field s_website_form_required" data-name="Preferred Payment Type">
+                                                <label class="col-form-label s_website_form_label" for="payment_type">
+                                                    Preferred Payment Type<span class="s_website_form_mark"> *</span>
+                                                </label>
+                                                <select name="payment_type" class="form-control" required="required">
+                                                    <option value="">Select payment type...</option>
+                                                    <t t-foreach="payment_type_options" t-as="option">
+                                                        <option t-att-value="option[0]">
+                                                            <t t-esc="option[1]"/>
+                                                        </option>
+                                                    </t>
+                                                </select>
+                                            </div>
+                                        </div>
+                                        </t>
+                                        <!-- End Property Details Section -->
+
+
+                                        <!-- == CONTACT & OTHER SECTION == -->
+                                        <!-- <h3 class="mt-5 mb-3 border-bottom pb-2">Contact &amp; Other Information</h3>
+                                        </div>
+                                        <div class="form-group s_website_form_field s_website_form_required" data-name="Source of Income">
+                                            <label class="col-form-label s_website_form_label" for="source_of_income">
+                                                Source of Income<span class="s_website_form_mark"> *</span>
+                                            </label>
+                                            <input type="text" class="form-control" name="source_of_income" required="required"/>
+                                        </div> -->
+
+                                        <div class="row mt-4">
+                                            <div class="form-group col-lg-12 residency_field mt-4" id="passport_doc_field">
+                                                <label class="col-form-label s_website_form_label" for="passport_docs">
+                                                    <b>Passport Supporting Document</b><t t-if="not is_change_mode"> <span class="s_website_form_mark"> *</span></t>
+                                                    <t t-if="is_change_mode"> <small class="text-muted">(Optional - upload only if changed)</small></t>
+                                                </label>
+
+                                                <div class="o_field_widget o_field_many2many_binary">
+                                                    <div class="oe_fileupload">
+                                                        <!-- File preview area -->
+                                                        <div class="o_attachments" id="passport_docs_preview">
+                                                            <small class="text-muted">No files selected</small>
+                                                        </div>
+
+                                                        <!-- Upload button -->
+                                                        <div class="oe_add mt-2">
+                                                            <span class="o_file_input">
+                                                                <span class="o_file_input_trigger">
+                                                                    <button type="button" class="btn btn-secondary o_attach" onclick="document.getElementById('passport_docs').click();">
+                                                                        <i class="fa fa-paperclip"> </i> Add Passport Supporting Documents
+                                                                    </button>
+                                                                </span>
+                                                                <input type="file"
+                                                                    name="passport_docs"
+                                                                    id="passport_docs"
+                                                                    class="o_input_file d-none"
+                                                                    multiple="multiple"
+                                                                    accept=".pdf,image/*,.doc,.docx"
+                                                                    t-att-data-required="'true' if not is_change_mode else 'false'"
+                                                                    onchange="previewMultipleFiles(this, 'passport_docs_preview')"/>
+                                                            </span>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div class="form-group col-lg-12 residency_field mt-4" id="emirates_id_doc_field">
+                                                <label class="col-form-label s_website_form_label" for="emirates_id_docs">
+                                                   <b>Emirates ID Supporting Document</b><t t-if="not is_change_mode"><span class="s_website_form_mark resident-required"> *</span></t>
+                                                   <t t-if="is_change_mode"> <small class="text-muted">(Optional - upload only if changed)</small></t>
+                                                </label>
+
+                                                <div class="o_field_widget o_field_many2many_binary">
+                                                    <div class="oe_fileupload">
+                                                        <!-- File preview area -->
+                                                        <div class="o_attachments" id="emirates_id_docs_preview">
+                                                            <small class="text-muted">No files selected</small>
+                                                        </div>
+
+                                                        <!-- Upload button -->
+                                                        <div class="oe_add mt-2">
+                                                            <span class="o_file_input">
+                                                                <span class="o_file_input_trigger">
+                                                                    <button type="button" class="btn btn-secondary o_attach" onclick="document.getElementById('emirates_id_docs').click();">
+                                                                        <i class="fa fa-paperclip"> </i> Add Emirates ID Supporting Documents
+                                                                    </button>
+                                                                </span>
+                                                                <input type="file"
+                                                                    name="emirates_id_docs"
+                                                                    id="emirates_id_docs"
+                                                                    class="o_input_file d-none"
+                                                                    multiple="multiple"
+                                                                    accept=".pdf,image/*,.doc,.docx"
+                                                                    onchange="previewMultipleFiles(this, 'emirates_id_docs_preview')"/>
+                                                            </span>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+
+                                        </div>
+
+                                        <!-- Security Questions Notice - Hidden in change mode -->
+                                        <t t-if="not is_change_mode">
+                                        <div class="mt-5">
+                                            <p class="fw-bold mb-1">Security Questions – Access and Use Notice:</p>
+                                            <p class="text-muted fst-italic" style="margin:0; font-size:0.95rem;">
+                                                The security questions and answers provided by the Client will be securely stored and accessed strictly on a need-to-know basis by authorised personnel, and used exclusively for identity verification in connection with any future request by the Client to amend their personal information, in accordance with applicable data protection laws.
+                                            </p>
+                                        </div>
+                                        </t>
+
+                                        <!-- ACKNOWLEDGMENT & CONSENT - Hidden in change mode -->
+                                        <t t-if="not is_change_mode">
+                                        <h3 class="mt-5 mb-3 pb-2">ACKNOWLEDGMENT &amp; CONSENT</h3>
+                                        <div class="form-group">
+                                            <div class="form-check">
+                                                <input class="form-check-input" type="checkbox" id="ack_consent" name="ack_consent" required="required"/>
+                                                <label class="form-check-label" for="ack_consent" style="display:block; text-align:justify;">
+                                                    I acknowledge that my personal data will be processed by the Developer as necessary for due diligence, compliance with UAE laws, and related dealings with banks and regulators. I further acknowledge that my data may be transferred outside the EU/EEA to the UAE, where appropriate safeguards are applied. For privacy matters, or to exercise my data rights, I may contact
+                                                    <a href="mailto:ce@7thkeys.com" style="color:#0b66ff; text-decoration:underline; margin-left:4px;">ce@7thkeys.com</a>.
+                                                </label>
+                                            </div>
+                                        </div>
+
+                                        <div class="form-group s_website_form_field s_website_form_required mt-5" data-name="Signature">
+                                            <label class="col-form-label s_website_form_label" for="signature">
+                                                Signature<span class="s_website_form_mark"> *</span>
+                                            </label>
+
+                                            <div class="o_website_signature border rounded p-2" data-target-input="signature_data">
+                                                <div class="mb-2">
+                                                    <a href="#" role="button" class="btn btn-light me-2 o_signature_toggle_draw">Draw</a>
+                                                    <a href="#" role="button" class="btn btn-light o_signature_toggle_upload">Upload</a>
+                                                </div>
+                                                <div class="o_signature_draw_area">
+                                                    <canvas class="o_signature_canvas" width="500" height="170" style="width:100%; height:170px; background:#fff;"> </canvas>
+                                                    <div class="mt-2 d-flex gap-2 align-items-center">
+                                                        <button class="btn btn-sm btn-secondary o_signature_clear" type="button">Clear</button>
+                                                    </div>
+                                                </div>
+                                                <div class="o_signature_upload_area" style="display:none;">
+                                                    <div class="mt-2 d-flex gap-2 align-items-center">
+                                                        <span class="text-muted">Upload an image:</span>
+                                                        <input type="file" class="form-control form-control-sm" name="signature" accept="image/*"/>
+                                                    </div>
+                                                </div>
+                                                <input type="hidden" name="signature_data"/>
+                                                <small class="text-muted d-block mt-1">Choose Draw or Upload. Only one is required.</small>
+                                            </div>
+                                        </div>
+                                        </t>
+                                        <!-- End Acknowledgment, Consent, and Signature Sections -->
+
+                                        <!-- AGENCY INFORMATION - Hidden in change mode -->
+                                        <t t-if="not is_change_mode">
+                                        <h3 class="mt-5 mb-3 border-bottom pb-2">AGENCY INFORMATION</h3>
+                                        <div class="row">
+                                            <!-- <div class="form-group col-lg-6 s_website_form_field">
+                                                <label class="col-form-label" for="agent_code">Agent ID</label>
+                                                <input type="text" readonly="readonly" class="form-control" name="agent_code"
+                                                       t-att-value="agent_code"/>
+                                            </div> -->
+                                            <div class="form-group col-lg-12 s_website_form_field">
+                                                <label class="col-form-label" for="trade_license_no">Trade License Registration No.</label>
+                                                <input type="text" readonly="readonly" class="form-control" name="trade_license_no"
+                                                       t-att-value="trade_license_no"/>
+                                            </div>
+                                        </div>
+                                        <div class="row">
+                                            <div class="form-group col-lg-6 s_website_form_field">
+                                                <label class="col-form-label" for="agency_name">Agency Name</label>
+                                                <input type="text" readonly="readonly" class="form-control" name="agency_name"
+                                                       t-att-value="agency_name"/>
+                                            </div>
+                                            <div class="form-group col-lg-6 s_website_form_field">
+                                                <label class="col-form-label" for="agent_name">Agent Name</label>
+                                                <input type="text" readonly="readonly" class="form-control" name="agent_name"
+                                                       t-att-value="agent_name"/>
+                                            </div>
+                                        </div>
+                                        <div class="row">
+                                            <div class="form-group col-lg-6 s_website_form_field">
+                                                <label class="col-form-label" for="agent_mobile">Agent Mobile</label>
+                                                <input type="tel" readonly="readonly" class="form-control" name="agent_mobile"
+                                                       t-att-value="agent_mobile"/>
+                                            </div>
+                                            <div class="form-group col-lg-6 s_website_form_field">
+                                                <label class="col-form-label" for="agent_email">Agent Email</label>
+                                                <input type="email" readonly="readonly" class="form-control" name="agent_email"
+                                                       t-att-value="agent_email"/>
+                                            </div>
+                                        </div>
+
+                                        <!-- OTP Verification JavaScript -->
+                                        <script type="text/javascript">
+                                            document.addEventListener('DOMContentLoaded', function () {
+                                                // Check verification status on page load
+                                                checkVerificationStatus();
+                                            });
+
+                                            // Get the access token from the form
+                                            function getAccessToken() {
+                                                // In change mode there is no cif_token; use change_token so OTP controllers can still key session/state.
+                                                const tokenInput = document.querySelector('input[name="cif_token"]') || document.querySelector('input[name="change_token"]');
+                                                return tokenInput ? tokenInput.value : null;
+                                            }
+
+                                            // Send OTP function
+                                            function sendOTP(fieldType) {
+                                                const phoneInput = document.getElementById(fieldType);
+                                                const phoneNumber = phoneInput ? phoneInput.value.trim() : '';
+                                                const token = getAccessToken();
+
+                                                if (!phoneNumber) {
+                                                    alert('Please enter a phone number first.');
+                                                    return;
+                                                }
+
+                                                if (!token) {
+                                                    alert('Invalid session. Please refresh the page.');
+                                                    return;
+                                                }
+
+                                                // Disable the verify button and show loading
+                                                const verifyBtn = document.getElementById('btn_verify_' + fieldType);
+                                                const originalText = verifyBtn ? verifyBtn.textContent : '';
+                                                if (verifyBtn) {
+                                                    verifyBtn.disabled = true;
+                                                    verifyBtn.textContent = 'Sending...';
+                                                }
+
+                                                // Send AJAX request
+                                                fetch('/cif/send_otp', {
+                                                    method: 'POST',
+                                                    headers: {
+                                                        'Content-Type': 'application/x-www-form-urlencoded',
+                                                    },
+                                                    body: new URLSearchParams({
+                                                        'phone_number': phoneNumber,
+                                                        'field_type': fieldType,
+                                                        'token': token
+                                                    })
+                                                })
+                                                .then(response => response.json())
+                                                .then(data => {
+                                                    if (data.success) {
+                                                        showSuccessMessage(fieldType, 'OTP sent successfully to your mobile!');
+                                                        // Show OTP input section
+                                                        const otpSectionEl = document.getElementById(fieldType + '_otp_section');
+                                                        if (otpSectionEl) {
+                                                            otpSectionEl.style.display = 'block';
+                                                        }
+                                                        // Hide verify button
+                                                        if (verifyBtn) {
+                                                            verifyBtn.style.display = 'none';
+                                                        }
+                                                        // Start resend countdown
+                                                        startResendCountdown(fieldType, 120); // 2 minutes
+                                                    } else {
+                                                        alert('Error: ' + data.message);
+                                                        if (verifyBtn) {
+                                                            verifyBtn.disabled = false;
+                                                            verifyBtn.textContent = originalText;
+                                                        }
+                                                    }
+                                                })
+                                                .catch(error => {
+                                                    alert('Network error. Please try again.');
+                                                    if (verifyBtn) {
+                                                        verifyBtn.disabled = false;
+                                                        verifyBtn.textContent = originalText;
+                                                    }
+                                                });
+                                            }
+
+                                            // Verify OTP function
+                                            function verifyOTP(fieldType) {
+                                                const otpInput = document.getElementById(fieldType + '_otp_code');
+                                                const otpCode = otpInput ? otpInput.value.trim() : '';
+                                                const token = getAccessToken();
+
+                                                if (!otpCode) {
+                                                    alert('Please enter the OTP code.');
+                                                    return;
+                                                }
+
+                                                if (!token) {
+                                                    alert('Invalid session. Please refresh the page.');
+                                                    return;
+                                                }
+
+                                                // Disable the verify button and show loading
+                                                const verifyBtn = document.getElementById('btn_submit_' + fieldType);
+                                                const originalText = verifyBtn ? verifyBtn.textContent : '';
+                                                if (verifyBtn) {
+                                                    verifyBtn.disabled = true;
+                                                    verifyBtn.textContent = 'Verifying...';
+                                                }
+
+                                                // Send AJAX request
+                                                fetch('/cif/verify_otp', {
+                                                    method: 'POST',
+                                                    headers: {
+                                                        'Content-Type': 'application/x-www-form-urlencoded',
+                                                    },
+                                                    body: new URLSearchParams({
+                                                        'otp_code': otpCode,
+                                                        'field_type': fieldType,
+                                                        'token': token
+                                                    })
+                                                })
+                                                .then(response => response.json())
+                                                .then(data => {
+                                                    if (data.success) {
+                                                        showSuccessMessage(fieldType, 'OTP verified successfully!');
+                                                        // Hide OTP section
+                                                        const otpSectionEl = document.getElementById(fieldType + '_otp_section');
+                                                        if (otpSectionEl) {
+                                                            otpSectionEl.style.display = 'none';
+                                                        }
+                                                        // Show verified message
+                                                        const verifiedEl = document.getElementById(fieldType + '_verified');
+                                                        if (verifiedEl) {
+                                                            verifiedEl.style.display = 'block';
+                                                        }
+                                                        // Mark phone number as verified in hidden field
+                                                        const verifiedField = document.getElementById(fieldType + '_is_verified');
+                                                        if (verifiedField) {
+                                                            verifiedField.value = 'true';
+                                                        }
+                                                    } else {
+                                                        alert('Error: ' + data.message);
+                                                    }
+                                                })
+                                                .catch(error => {
+                                                    alert('Network error. Please try again.');
+                                                })
+                                                .finally(() => {
+                                                    if (verifyBtn) {
+                                                        verifyBtn.disabled = false;
+                                                        verifyBtn.textContent = originalText;
+                                                    }
+                                                });
+                                            }
+
+                                            // Check verification status
+                                            function checkVerificationStatus() {
+                                                const token = getAccessToken();
+                                                if (!token) return;
+
+                                                // Check phone verification status
+                                                ['mobile', 'phone'].forEach(fieldType => {
+                                                    const currentPhone = document.getElementById(fieldType)?.value || '';
+                                                    fetch('/cif/check_verification_status', {
+                                                        method: 'POST',
+                                                        headers: {
+                                                            'Content-Type': 'application/x-www-form-urlencoded',
+                                                        },
+                                                        body: new URLSearchParams({
+                                                            'field_type': fieldType,
+                                                            'token': token,
+                                                            'current_phone': currentPhone
+                                                        })
+                                                    })
+                                                    .then(response => response.json())
+                                                    .then(data => {
+                                                        if (data.success &amp;&amp; data.verified) {
+                                                            // Hide verify button and OTP section
+                                                            const verifyBtn = document.getElementById('btn_verify_' + fieldType);
+                                                            if (verifyBtn) {
+                                                                verifyBtn.style.display = 'none';
+                                                            }
+                                                            const otpSectionEl = document.getElementById(fieldType + '_otp_section');
+                                                            if (otpSectionEl) {
+                                                                otpSectionEl.style.display = 'none';
+                                                            }
+                                                            // Show verified status
+                                                            const verifiedEl = document.getElementById(fieldType + '_verified');
+                                                            if (verifiedEl) {
+                                                                verifiedEl.style.display = 'block';
+                                                            }
+                                                        }
+                                                    })
+                                                    .catch(error => {
+                                                        console.error('Error checking verification status:', error);
+                                                    });
+                                                });
+
+                                                // Check email verification status
+                                                ['email', 'email_address'].forEach(fieldType => {
+                                                    const currentEmail = document.getElementById(fieldType)?.value || '';
+                                                    fetch('/cif/check_email_verification_status', {
+                                                        method: 'POST',
+                                                        headers: {
+                                                            'Content-Type': 'application/x-www-form-urlencoded',
+                                                        },
+                                                        body: new URLSearchParams({
+                                                            'field_type': fieldType,
+                                                            'token': token,
+                                                            'current_email': currentEmail
+                                                        })
+                                                    })
+                                                    .then(response => response.json())
+                                                    .then(data => {
+                                                        // Update verification state for submit validation
+                                                        if (window.verificationStates) {
+                                                            window.verificationStates[fieldType] = data.verified || false;
+                                                        }
+                                                        if (data.success &amp;&amp; data.verified) {
+                                                            // Hide verify button and OTP section
+                                                            const verifyBtn = document.getElementById('btn_verify_' + fieldType);
+                                                            if (verifyBtn) {
+                                                                verifyBtn.style.display = 'none';
+                                                            }
+                                                            const otpSectionEl = document.getElementById(fieldType + '_otp_section');
+                                                            if (otpSectionEl) {
+                                                                otpSectionEl.style.display = 'none';
+                                                            }
+                                                            // Show verified status
+                                                            const verifiedEl = document.getElementById(fieldType + '_verified');
+                                                            if (verifiedEl) {
+                                                                verifiedEl.style.display = 'block';
+                                                            }
+                                                        }
+                                                    })
+                                                    .catch(error => {
+                                                        console.error('Error checking email verification status:', error);
+                                                    });
+                                                });
+                                            }
+
+                                            // Reset verification when phone number changes
+                                            document.addEventListener('DOMContentLoaded', function() {
+                                                ['mobile', 'phone'].forEach(fieldType => {
+                                                    const input = document.getElementById(fieldType);
+                                                    if (input) {
+                                                        input.addEventListener('input', function() {
+                                                            // Reset verification status
+                                                            const verifyBtn = document.getElementById('btn_verify_' + fieldType);
+                                                            if (verifyBtn) {
+                                                                verifyBtn.style.display = 'inline-block';
+                                                                verifyBtn.disabled = false;
+                                                                verifyBtn.textContent = 'Verify';
+                                                            }
+                                                            const otpSectionEl = document.getElementById(fieldType + '_otp_section');
+                                                            if (otpSectionEl) {
+                                                                otpSectionEl.style.display = 'none';
+                                                            }
+                                                            const verifiedEl = document.getElementById(fieldType + '_verified');
+                                                            if (verifiedEl) {
+                                                                verifiedEl.style.display = 'none';
+                                                            }
+                                                        });
+                                                    }
+                                                });
+
+                                                // Reset verification when email changes
+                                                ['email', 'email_address'].forEach(fieldType => {
+                                                    const input = document.getElementById(fieldType);
+                                                    if (input) {
+                                                        input.addEventListener('input', function() {
+                                                            // Reset verification status
+                                                            const verifyBtn = document.getElementById('btn_verify_' + fieldType);
+                                                            if (verifyBtn) {
+                                                                verifyBtn.style.display = 'inline-block';
+                                                                verifyBtn.disabled = false;
+                                                                verifyBtn.textContent = 'Verify';
+                                                            }
+                                                            const otpSectionEl = document.getElementById(fieldType + '_otp_section');
+                                                            if (otpSectionEl) {
+                                                                otpSectionEl.style.display = 'none';
+                                                            }
+                                                            const verifiedEl = document.getElementById(fieldType + '_verified');
+                                                            if (verifiedEl) {
+                                                                verifiedEl.style.display = 'none';
+                                                            }
+                                                        });
+                                                    }
+                                                });
+                                            });
+
+                                            // Email OTP Functions
+                                            function sendEmailOTP(fieldType) {
+                                                const emailInput = document.getElementById(fieldType);
+                                                const emailAddress = emailInput.value.trim();
+                                                const token = getAccessToken();
+
+                                                if (!emailAddress) {
+                                                    showEmailError(fieldType, 'Please enter an email address first.');
+                                                    return;
+                                                }
+
+                                                // Validate email format
+                                                if (!isValidEmail(emailAddress)) {
+                                                    showEmailError(fieldType, 'Please enter a valid email address format (e.g., user@example.com).');
+                                                    return;
+                                                }
+
+                                                // Clear any previous error messages
+                                                clearEmailError(fieldType);
+
+                                                if (!token) {
+                                                    showEmailError(fieldType, 'Invalid session. Please refresh the page.');
+                                                    return;
+                                                }
+
+                                                // Disable the verify button and show loading
+                                                const verifyBtn = document.getElementById('btn_verify_' + fieldType);
+                                                const originalText = verifyBtn.textContent;
+                                                verifyBtn.disabled = true;
+                                                verifyBtn.textContent = 'Sending...';
+
+                                                // Send AJAX request
+                                                fetch('/cif/send_email_otp', {
+                                                    method: 'POST',
+                                                    headers: {
+                                                        'Content-Type': 'application/x-www-form-urlencoded',
+                                                    },
+                                                    body: new URLSearchParams({
+                                                        'email_address': emailAddress,
+                                                        'field_type': fieldType,
+                                                        'token': token
+                                                    })
+                                                })
+                                                .then(response => response.json())
+                                                .then(data => {
+                                                    if (data.success) {
+                                                        showSuccessMessage(fieldType, 'Verification code sent successfully to your email!');
+                                                        // Show OTP input section
+                                                        document.getElementById(fieldType + '_otp_section').style.display = 'block';
+                                                        // Hide verify button
+                                                        verifyBtn.style.display = 'none';
+                                                        // Start resend countdown
+                                                        startEmailResendCountdown(fieldType, 120); // 2 minutes
+                                                    } else {
+                                                        showEmailError(fieldType, 'Error: ' + data.message);
+                                                        verifyBtn.disabled = false;
+                                                        verifyBtn.textContent = originalText;
+                                                    }
+                                                })
+                                                .catch(error => {
+                                                    showEmailError(fieldType, 'Network error. Please try again.');
+                                                    verifyBtn.disabled = false;
+                                                    verifyBtn.textContent = originalText;
+                                                });
+                                            }
+
+                                            // Verify Phone OTP function
+                                            function verifyOTP(fieldType) {
+                                                const otpInput = document.getElementById(fieldType + '_otp_code');
+                                                const otpCode = otpInput.value.trim();
+                                                const token = getAccessToken();
+
+                                                if (!otpCode) {
+                                                    showOTPError(fieldType, 'Please enter the verification code.');
+                                                    return;
+                                                }
+
+                                                if (!token) {
+                                                    showOTPError(fieldType, 'Invalid session. Please refresh the page.');
+                                                    return;
+                                                }
+
+                                                // Clear any existing OTP errors
+                                                clearOTPError(fieldType);
+
+                                                // Send AJAX request
+                                                fetch('/cif/verify_otp', {
+                                                    method: 'POST',
+                                                    headers: {
+                                                        'Content-Type': 'application/x-www-form-urlencoded',
+                                                    },
+                                                    body: new URLSearchParams({
+                                                        'otp_code': otpCode,
+                                                        'field_type': fieldType,
+                                                        'token': token
+                                                    })
+                                                })
+                                                .then(response => response.json())
+                                                .then(data => {
+                                                    if (data.success) {
+                                                        showSuccessMessage(fieldType, fieldType === 'mobile' ? 'Mobile number verified successfully!' : 'Phone number verified successfully!');
+                                                        // Hide OTP section
+                                                        document.getElementById(fieldType + '_otp_section').style.display = 'none';
+                                                        // Show verified status
+                                                        document.getElementById(fieldType + '_verified').style.display = 'block';
+                                                    } else {
+                                                        showOTPError(fieldType, data.message);
+                                                    }
+                                                })
+                                                .catch(error => {
+                                                    showOTPError(fieldType, 'Network error. Please try again.');
+                                                });
+                                            }
+
+                                            // Verify Email OTP function
+                                            function verifyEmailOTP(fieldType) {
+                                                const otpInput = document.getElementById(fieldType + '_otp_code');
+                                                const otpCode = otpInput.value.trim();
+                                                const token = getAccessToken();
+
+                                                if (!otpCode) {
+                                                    showOTPError(fieldType, 'Please enter the verification code.');
+                                                    return;
+                                                }
+
+                                                if (!token) {
+                                                    showOTPError(fieldType, 'Invalid session. Please refresh the page.');
+                                                    return;
+                                                }
+
+                                                // Clear any existing OTP errors
+                                                clearOTPError(fieldType);
+
+                                                // Send AJAX request
+                                                fetch('/cif/verify_email_otp', {
+                                                    method: 'POST',
+                                                    headers: {
+                                                        'Content-Type': 'application/x-www-form-urlencoded',
+                                                    },
+                                                    body: new URLSearchParams({
+                                                        'otp_code': otpCode,
+                                                        'field_type': fieldType,
+                                                        'token': token
+                                                    })
+                                                })
+                                                .then(response => response.json())
+                                                .then(data => {
+                                                    if (data.success) {
+                                                        showSuccessMessage(fieldType, 'Email address verified successfully!');
+                                                        // Hide OTP section
+                                                        document.getElementById(fieldType + '_otp_section').style.display = 'none';
+                                                        // Show verified status
+                                                        document.getElementById(fieldType + '_verified').style.display = 'block';
+                                                        // Update verification state
+                                                        updateVerificationState(fieldType, true);
+                                                        // Hide form validation error if any
+                                                        hideFormError();
+                                                    } else {
+                                                        showOTPError(fieldType, data.message || 'Invalid verification code. Please try again.');
+                                                    }
+                                                })
+                                                .catch(error => {
+                                                    showOTPError(fieldType, 'Network error. Please try again.');
+                                                });
+                                            }
+
+                                            // Resend OTP Functions
+                                            function resendOTP(fieldType) {
+                                                const token = getAccessToken();
+                                                if (!token) {
+                                                    alert('Invalid session. Please refresh the page.');
+                                                    return;
+                                                }
+
+                                                const resendBtn = document.getElementById('resend_' + fieldType);
+                                                resendBtn.disabled = true;
+                                                resendBtn.textContent = 'Sending...';
+
+                                                fetch('/cif/resend_otp', {
+                                                    method: 'POST',
+                                                    headers: {
+                                                        'Content-Type': 'application/x-www-form-urlencoded',
+                                                    },
+                                                    body: new URLSearchParams({
+                                                        'field_type': fieldType,
+                                                        'token': token
+                                                    })
+                                                })
+                                                .then(response => response.json())
+                                                .then(data => {
+                                                    if (data.success) {
+                                                        showSuccessMessage(fieldType, 'New verification code sent!');
+                                                        startResendCountdown(fieldType, 120); // 2 minutes
+                                                    } else {
+                                                        alert('Error: ' + data.message);
+                                                        if (data.cooldown_remaining) {
+                                                            startResendCountdown(fieldType, data.cooldown_remaining);
+                                                        } else {
+                                                            resendBtn.disabled = false;
+                                                            resendBtn.textContent = 'Resend Code';
+                                                        }
+                                                    }
+                                                })
+                                                .catch(error => {
+                                                    alert('Network error. Please try again.');
+                                                    resendBtn.disabled = false;
+                                                    resendBtn.textContent = 'Resend Code';
+                                                });
+                                            }
+
+                                            function resendEmailOTP(fieldType) {
+                                                const token = getAccessToken();
+                                                if (!token) {
+                                                    alert('Invalid session. Please refresh the page.');
+                                                    return;
+                                                }
+
+                                                const resendBtn = document.getElementById('resend_' + fieldType);
+                                                resendBtn.disabled = true;
+                                                resendBtn.textContent = 'Sending...';
+
+                                                fetch('/cif/resend_email_otp', {
+                                                    method: 'POST',
+                                                    headers: {
+                                                        'Content-Type': 'application/x-www-form-urlencoded',
+                                                    },
+                                                    body: new URLSearchParams({
+                                                        'field_type': fieldType,
+                                                        'token': token
+                                                    })
+                                                })
+                                                .then(response => response.json())
+                                                .then(data => {
+                                                    if (data.success) {
+                                                        showSuccessMessage(fieldType, 'New verification code sent to your email!');
+                                                        startEmailResendCountdown(fieldType, 120); // 2 minutes
+                                                    } else {
+                                                        alert('Error: ' + data.message);
+                                                        if (data.cooldown_remaining) {
+                                                            startEmailResendCountdown(fieldType, data.cooldown_remaining);
+                                                        } else {
+                                                            resendBtn.disabled = false;
+                                                            resendBtn.textContent = 'Resend Code';
+                                                        }
+                                                    }
+                                                })
+                                                .catch(error => {
+                                                    alert('Network error. Please try again.');
+                                                    resendBtn.disabled = false;
+                                                    resendBtn.textContent = 'Resend Code';
+                                                });
+                                            }
+
+                                            // ============================================
+                                            // NEW EMAIL OTP FUNCTIONS (for Change Mode)
+                                            // ============================================
+
+                                            // Show verify button when new email is entered AND different from current email
+                                            document.addEventListener('DOMContentLoaded', function() {
+                                                const newEmailInput = document.getElementById('new_email');
+                                                const currentEmailInput = document.getElementById('email_current');
+
+                                                if (newEmailInput) {
+                                                    newEmailInput.addEventListener('input', function() {
+                                                        const verifyBtn = document.getElementById('btn_verify_new_email');
+                                                        const newEmailValue = this.value.trim().toLowerCase();
+                                                        const currentEmailValue = currentEmailInput ? currentEmailInput.value.trim().toLowerCase() : '';
+
+                                                        // Debug logging
+                                                        console.log('Email Verification Check:');
+                                                        console.log('  Current Email:', currentEmailValue);
+                                                        console.log('  New Email:', newEmailValue);
+                                                        console.log('  Are Different?', newEmailValue !== currentEmailValue);
+
+                                                        // Show verify button only if:
+                                                        // 1. New email is not empty
+                                                        // 2. New email is different from current email
+                                                        if (newEmailValue &amp;&amp; newEmailValue !== currentEmailValue) {
+                                                            console.log('  → Showing Verify button');
+                                                            verifyBtn.style.display = 'inline-block';
+                                                        } else {
+                                                            console.log('  → Hiding Verify button');
+                                                            verifyBtn.style.display = 'none';
+                                                            document.getElementById('new_email_otp_section').style.display = 'none';
+                                                            document.getElementById('new_email_verified').style.display = 'none';
+                                                        }
+                                                    });
+                                                }
+                                            });
+
+                                            function sendNewEmailOTP() {
+                                                const emailInput = document.getElementById('new_email');
+                                                const newEmail = emailInput.value.trim();
+                                                const changeToken = document.querySelector('input[name="change_token"]').value;
+
+                                                if (!newEmail) {
+                                                    alert('Please enter a new email address first.');
+                                                    return;
+                                                }
+
+                                                // Validate email format
+                                                if (!isValidEmail(newEmail)) {
+                                                    alert('Please enter a valid email address format.');
+                                                    return;
+                                                }
+
+                                                if (!changeToken) {
+                                                    alert('Invalid session. Please refresh the page.');
+                                                    return;
+                                                }
+
+                                                const verifyBtn = document.getElementById('btn_verify_new_email');
+                                                const originalText = verifyBtn.textContent;
+                                                verifyBtn.disabled = true;
+                                                verifyBtn.textContent = 'Sending...';
+
+                                                // Send AJAX request
+                                                fetch('/cif/change/send-new-email-otp', {
+                                                    method: 'POST',
+                                                    headers: {
+                                                        'Content-Type': 'application/json',
+                                                    },
+                                                    body: JSON.stringify({
+                                                        'jsonrpc': '2.0',
+                                                        'method': 'call',
+                                                        'params': {
+                                                            'token': changeToken,
+                                                            'new_email': newEmail
+                                                        }
+                                                    })
+                                                })
+                                                .then(response => response.json())
+                                                .then(data => {
+                                                    if (data.result &amp;&amp; data.result.success) {
+                                                        alert('Verification code sent to ' + newEmail);
+                                                        // Show OTP input section
+                                                        document.getElementById('new_email_otp_section').style.display = 'block';
+                                                        // Hide verify button
+                                                        verifyBtn.style.display = 'none';
+                                                        // Start resend countdown
+                                                        startNewEmailResendCountdown(120); // 2 minutes
+                                                    } else {
+                                                        alert('Error: ' + (data.result ? data.result.message : 'Failed to send code'));
+                                                        verifyBtn.disabled = false;
+                                                        verifyBtn.textContent = originalText;
+                                                    }
+                                                })
+                                                .catch(error => {
+                                                    alert('Network error. Please try again.');
+                                                    verifyBtn.disabled = false;
+                                                    verifyBtn.textContent = originalText;
+                                                });
+                                            }
+
+                                            function verifyNewEmailOTP() {
+                                                const otpInput = document.getElementById('new_email_otp_code');
+                                                const otpCode = otpInput.value.trim();
+                                                const changeToken = document.querySelector('input[name="change_token"]').value;
+
+                                                if (!otpCode) {
+                                                    alert('Please enter the verification code.');
+                                                    return;
+                                                }
+
+                                                if (!changeToken) {
+                                                    alert('Invalid session. Please refresh the page.');
+                                                    return;
+                                                }
+
+                                                // Send AJAX request
+                                                fetch('/cif/change/verify-new-email-otp', {
+                                                    method: 'POST',
+                                                    headers: {
+                                                        'Content-Type': 'application/json',
+                                                    },
+                                                    body: JSON.stringify({
+                                                        'jsonrpc': '2.0',
+                                                        'method': 'call',
+                                                        'params': {
+                                                            'token': changeToken,
+                                                            'otp_code': otpCode
+                                                        }
+                                                    })
+                                                })
+                                                .then(response => response.json())
+                                                .then(data => {
+                                                    if (data.result &amp;&amp; data.result.success) {
+                                                        alert('New email verified successfully!');
+                                                        // Hide OTP section
+                                                        document.getElementById('new_email_otp_section').style.display = 'none';
+                                                        // Show verified status
+                                                        document.getElementById('new_email_verified').style.display = 'block';
+                                                        // Disable email input
+                                                        document.getElementById('new_email').readOnly = true;
+                                                    } else {
+                                                        alert(data.result ? data.result.message : 'Invalid verification code.');
+                                                    }
+                                                })
+                                                .catch(error => {
+                                                    alert('Network error. Please try again.');
+                                                });
+                                            }
+
+                                            function resendNewEmailOTP() {
+                                                const changeToken = document.querySelector('input[name="change_token"]').value;
+                                                if (!changeToken) {
+                                                    alert('Invalid session. Please refresh the page.');
+                                                    return;
+                                                }
+
+                                                const resendBtn = document.getElementById('resend_new_email');
+                                                resendBtn.disabled = true;
+                                                resendBtn.textContent = 'Sending...';
+
+                                                fetch('/cif/change/resend-new-email-otp', {
+                                                    method: 'POST',
+                                                    headers: {
+                                                        'Content-Type': 'application/json',
+                                                    },
+                                                    body: JSON.stringify({
+                                                        'jsonrpc': '2.0',
+                                                        'method': 'call',
+                                                        'params': {
+                                                            'token': changeToken
+                                                        }
+                                                    })
+                                                })
+                                                .then(response => response.json())
+                                                .then(data => {
+                                                    if (data.result &amp;&amp; data.result.success) {
+                                                        alert('New verification code sent!');
+                                                        startNewEmailResendCountdown(120); // 2 minutes
+                                                    } else {
+                                                        alert('Error: ' + (data.result ? data.result.message : 'Failed to resend'));
+                                                        if (data.result &amp;&amp; data.result.cooldown_remaining) {
+                                                            startNewEmailResendCountdown(data.result.cooldown_remaining);
+                                                        } else {
+                                                            resendBtn.disabled = false;
+                                                            resendBtn.textContent = 'Resend Code';
+                                                        }
+                                                    }
+                                                })
+                                                .catch(error => {
+                                                    alert('Network error. Please try again.');
+                                                    resendBtn.disabled = false;
+                                                    resendBtn.textContent = 'Resend Code';
+                                                });
+                                            }
+
+                                            function startNewEmailResendCountdown(seconds) {
+                                                const resendBtn = document.getElementById('resend_new_email');
+                                                const timerElement = document.getElementById('resend_new_email_timer');
+
+                                                resendBtn.style.display = 'none';
+
+                                                const countdown = setInterval(() => {
+                                                    const minutes = Math.floor(seconds / 60);
+                                                    const remainingSeconds = seconds % 60;
+                                                    timerElement.textContent = 'Resend available in ' + minutes + ':' + remainingSeconds.toString().padStart(2, '0');
+
+                                                    if (seconds &lt;= 0) {
+                                                        clearInterval(countdown);
+                                                        timerElement.textContent = '';
+                                                        resendBtn.style.display = 'inline';
+                                                        resendBtn.disabled = false;
+                                                        resendBtn.textContent = 'Resend Code';
+                                                    }
+                                                    seconds--;
+                                                }, 1000);
+                                            }
+
+                                            // Countdown Timer Functions
+                                            function startResendCountdown(fieldType, seconds) {
+                                                const resendBtn = document.getElementById('resend_' + fieldType);
+                                                const timerElement = document.getElementById('resend_' + fieldType + '_timer');
+
+                                                resendBtn.style.display = 'none';
+
+                                                const countdown = setInterval(() => {
+                                                    const minutes = Math.floor(seconds / 60);
+                                                    const remainingSeconds = seconds % 60;
+                                                    timerElement.textContent = 'Resend available in ' + minutes + ':' + remainingSeconds.toString().padStart(2, '0');
+                                                    timerElement.style.fontWeight = 'bold';
+                                                    timerElement.style.color = '#007bff';
+
+                                                    if (seconds &lt;= 0) {
+                                                        clearInterval(countdown);
+                                                        timerElement.textContent = '';
+                                                        resendBtn.style.display = 'inline';
+                                                        resendBtn.disabled = false;
+                                                        resendBtn.textContent = 'Resend Code';
+                                                        resendBtn.style.fontWeight = 'bold';
+                                                        resendBtn.style.fontSize = (parseInt(window.getComputedStyle(resendBtn).fontSize) + 1) + 'px';
+                                                    }
+                                                    seconds--;
+                                                }, 1000);
+                                            }
+
+                                            function startEmailResendCountdown(fieldType, seconds) {
+                                                const resendBtn = document.getElementById('resend_' + fieldType);
+                                                const timerElement = document.getElementById('resend_' + fieldType + '_timer');
+
+                                                resendBtn.style.display = 'none';
+
+                                                const countdown = setInterval(() => {
+                                                    const minutes = Math.floor(seconds / 60);
+                                                    const remainingSeconds = seconds % 60;
+                                                    timerElement.textContent = 'Resend available in ' + minutes + ':' + remainingSeconds.toString().padStart(2, '0');
+                                                    timerElement.style.fontWeight = 'bold';
+                                                    timerElement.style.color = '#007bff';
+
+                                                    if (seconds &lt;= 0) {
+                                                        clearInterval(countdown);
+                                                        timerElement.textContent = '';
+                                                        resendBtn.style.display = 'inline';
+                                                        resendBtn.disabled = false;
+                                                        resendBtn.textContent = 'Resend Code';
+                                                        resendBtn.style.fontWeight = 'bold';
+                                                        resendBtn.style.fontSize = (parseInt(window.getComputedStyle(resendBtn).fontSize) + 1) + 'px';
+                                                    }
+                                                    seconds--;
+                                                }, 1000);
+                                            }
+
+                                            // Email validation helper functions
+                                            function isValidEmail(email) {
+                                                const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+                                                return emailRegex.test(email);
+                                            }
+
+                                            function showEmailError(fieldType, message) {
+                                                // Remove existing error message
+                                                clearEmailError(fieldType);
+
+                                                // Create error message element
+                                                const errorDiv = document.createElement('div');
+                                                errorDiv.id = fieldType + '_email_error';
+                                                errorDiv.className = 'text-danger mt-1';
+                                                errorDiv.style.fontSize = '12px';
+
+                                                // Create icon and text separately to avoid HTML encoding issues
+                                                const icon = document.createElement('i');
+                                                icon.className = 'fa fa-exclamation-triangle';
+                                                errorDiv.appendChild(icon);
+                                                errorDiv.appendChild(document.createTextNode(' ' + message));
+
+                                                // Insert after the input group
+                                                const inputGroup = document.getElementById(fieldType).closest('.input-group');
+                                                if (inputGroup) {
+                                                    inputGroup.parentNode.insertBefore(errorDiv, inputGroup.nextSibling);
+                                                }
+                                            }
+
+                                            function clearEmailError(fieldType) {
+                                                const errorElement = document.getElementById(fieldType + '_email_error');
+                                                if (errorElement) {
+                                                    errorElement.remove();
+                                                }
+                                            }
+
+                                            // Success message functions
+                                            function showSuccessMessage(fieldType, message) {
+                                                // Remove existing success message
+                                                clearSuccessMessage(fieldType);
+
+                                                // Create success message element
+                                                const successDiv = document.createElement('div');
+                                                successDiv.id = fieldType + '_success_message';
+                                                successDiv.className = 'text-success mt-1';
+                                                successDiv.style.fontSize = '12px';
+
+                                                // Create icon and text separately to avoid HTML encoding issues
+                                                const icon = document.createElement('i');
+                                                icon.className = 'fa fa-check-circle';
+                                                successDiv.appendChild(icon);
+                                                successDiv.appendChild(document.createTextNode(' ' + message));
+
+                                                // Insert after the input group
+                                                const inputGroup = document.getElementById(fieldType).closest('.input-group');
+                                                if (inputGroup) {
+                                                    inputGroup.parentNode.insertBefore(successDiv, inputGroup.nextSibling);
+                                                }
+
+                                                // Auto-hide success message after 5 seconds
+                                                setTimeout(() => {
+                                                    clearSuccessMessage(fieldType);
+                                                }, 5000);
+                                            }
+
+                                            function clearSuccessMessage(fieldType) {
+                                                const successElement = document.getElementById(fieldType + '_success_message');
+                                                if (successElement) {
+                                                    successElement.remove();
+                                                }
+                                            }
+
+                                            // OTP error message functions
+                                            function showOTPError(fieldType, message) {
+                                                // Remove existing OTP error message
+                                                clearOTPError(fieldType);
+
+                                                // Create OTP error message element
+                                                const errorDiv = document.createElement('div');
+                                                errorDiv.id = fieldType + '_otp_error';
+                                                errorDiv.className = 'text-danger mt-1';
+                                                errorDiv.style.fontSize = '12px';
+
+                                                // Create icon and text separately to avoid HTML encoding issues
+                                                const icon = document.createElement('i');
+                                                icon.className = 'fa fa-exclamation-triangle';
+                                                errorDiv.appendChild(icon);
+                                                errorDiv.appendChild(document.createTextNode(' ' + message));
+
+                                                // Insert after the OTP section
+                                                const otpSection = document.getElementById(fieldType + '_otp_section');
+                                                if (otpSection) {
+                                                    otpSection.parentNode.insertBefore(errorDiv, otpSection.nextSibling);
+                                                }
+                                            }
+
+                                            function clearOTPError(fieldType) {
+                                                const errorElement = document.getElementById(fieldType + '_otp_error');
+                                                if (errorElement) {
+                                                    errorElement.remove();
+                                                }
+                                            }
+
+                                            // Real-time field validation
+                                            document.addEventListener('DOMContentLoaded', function() {
+                                                // Store verification states
+                                                window.verificationStates = {
+                                                    email: false,
+                                                    email_address: false,
+                                                    mobile: false,
+                                                    phone: false
+                                                };
+
+                                                // Add event listeners for field changes
+                                                ['mobile', 'phone', 'email', 'email_address'].forEach(fieldType => {
+                                                    const input = document.getElementById(fieldType);
+                                                    if (input) {
+                                                        input.addEventListener('input', function() {
+                                                            // Clear email error when user starts typing
+                                                            if (fieldType === 'email' || fieldType === 'email_address') {
+                                                                clearEmailError(fieldType);
+                                                            }
+
+                                                            // Clear success messages when user changes field value
+                                                            clearSuccessMessage(fieldType);
+
+                                                            // Reset verification status when field value changes
+                                                            if (window.verificationStates[fieldType]) {
+                                                                window.verificationStates[fieldType] = false;
+                                                                const verifiedSection = document.getElementById(fieldType + '_verified');
+                                                                if (verifiedSection) {
+                                                                    verifiedSection.style.display = 'none';
+                                                                }
+                                                                const verifyBtn = document.getElementById('btn_verify_' + fieldType);
+                                                                if (verifyBtn) {
+                                                                    verifyBtn.style.display = 'inline-block';
+                                                                    verifyBtn.disabled = false;
+                                                                    verifyBtn.textContent = 'Verify';
+                                                                }
+                                                                const otpSection = document.getElementById(fieldType + '_otp_section');
+                                                                if (otpSection) {
+                                                                    otpSection.style.display = 'none';
+                                                                }
+                                                            }
+
+                                                            // Delay check slightly to allow user to finish typing
+                                                            setTimeout(() => {
+                                                                checkVerificationStatus();
+                                                            }, 500);
+                                                        });
+                                                    }
+
+                                                    // Add event listener for OTP input fields
+                                                    const otpInput = document.getElementById(fieldType + '_otp_code');
+                                                    if (otpInput) {
+                                                        otpInput.addEventListener('input', function() {
+                                                            // Clear OTP errors when user starts typing in OTP field
+                                                            clearOTPError(fieldType);
+                                                        });
+                                                    }
+                                                });
+
+                                                // Add form submit validation
+                                                const form = document.querySelector('form[action="/cif/submit/individual/cif.form"]');
+                                                if (form) {
+                                                    form.addEventListener('submit', function(e) {
+                                                        if (!validateFormBeforeSubmit()) {
+                                                            e.preventDefault();
+                                                            return false;
+                                                        }
+                                                    });
+                                                }
+                                            });
+
+                                            // Form validation function
+                                            function validateFormBeforeSubmit() {
+                                                let requiredFieldsToVerify = [];
+                                                let errorMessages = [];
+
+                                                // Check email field (required)
+                                                const emailInput = document.getElementById('email');
+                                                if (emailInput &amp;&amp; emailInput.value.trim()) {
+                                                    if (!window.verificationStates.email) {
+                                                        requiredFieldsToVerify.push('email');
+                                                        errorMessages.push('Email verification is required');
+                                                    }
+                                                }
+
+                                                // Alt email no longer requires verification even if filled
+                                                // const emailAddressInput = document.getElementById('email_address');
+                                                // if (emailAddressInput &amp;&amp; emailAddressInput.value.trim()) {
+                                                //     if (!window.verificationStates.email_address) {
+                                                //         requiredFieldsToVerify.push('email_address');
+                                                //         errorMessages.push('Alternative email verification is required');
+                                                //     }
+                                                // }
+
+                                                if (requiredFieldsToVerify.length > 0) {
+                                                    // Show form-level error message
+                                                    showFormError(errorMessages);
+                                                    return false;
+                                                } else {
+                                                    // Hide form-level error message
+                                                    hideFormError();
+                                                    return true;
+                                                }
+                                            }
+
+                                            function showFormError(messages) {
+                                                // Remove existing error message
+                                                hideFormError();
+
+                                                // Create error message element
+                                                const errorDiv = document.createElement('div');
+                                                errorDiv.id = 'form_validation_error';
+                                                errorDiv.className = 'alert alert-danger mt-3';
+                                                errorDiv.setAttribute('role', 'alert');
+
+                                                // Create content safely
+                                                const title = document.createElement('strong');
+                                                title.textContent = 'Verification Required:';
+                                                errorDiv.appendChild(title);
+                                                errorDiv.appendChild(document.createElement('br'));
+
+                                                messages.forEach(message => {
+                                                    errorDiv.appendChild(document.createTextNode(message));
+                                                    errorDiv.appendChild(document.createElement('br'));
+                                                });
+
+                                                // Insert before the submit button
+                                                const submitBtn = document.querySelector('.btn.btn-primary.btn-lg.w-100');
+                                                if (submitBtn) {
+                                                    submitBtn.parentNode.insertBefore(errorDiv, submitBtn);
+
+                                                    // Scroll to error message
+                                                    errorDiv.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                                                }
+
+                                                // Auto-hide error message after 5 seconds
+                                                setTimeout(function() {
+                                                    hideFormError();
+                                                }, 5000);
+                                            }
+
+                                            function hideFormError() {
+                                                const errorElement = document.getElementById('form_validation_error');
+                                                if (errorElement) {
+                                                    // Add fade-out animation
+                                                    errorElement.style.transition = 'opacity 0.5s ease-out';
+                                                    errorElement.style.opacity = '0';
+
+                                                    // Remove element after animation completes
+                                                    setTimeout(function() {
+                                                        errorElement.remove();
+                                                    }, 500);
+                                                }
+                                            }
+
+                                            // Update verification states when OTP is successfully verified
+                                            function updateVerificationState(fieldType, verified) {
+                                                if (window.verificationStates) {
+                                                    window.verificationStates[fieldType] = verified;
+                                                }
+                                            }
+
+
+                                            // Validate shareholder percentage before form submission
+                                            (function() {
+                                                var shareholderInput = document.getElementById('shareholder_percentage');
+                                                var shareholderErrorDiv = document.getElementById('shareholder_percentage_error');
+                                                var submitButton = document.getElementById('submit_cif_company_form');
+                                                var form = document.querySelector('form[method="POST"]');
+
+                                                if (shareholderInput &amp;&amp; form) {
+                                                    var requiredValue = parseFloat(shareholderInput.getAttribute('data-required-percentage'));
+                                                    // Fallback: try to read from visible span if attribute missing or not numeric
+                                                    if (isNaN(requiredValue)) {
+                                                        var span = document.getElementById('required_percentage_display');
+                                                        if (span) {
+                                                            // trim and remove non-numeric characters (like %)
+                                                            var txt = (span.textContent || span.innerText || '').trim().replace('%','');
+                                                            requiredValue = parseFloat(txt);
+                                                        }
+                                                    }
+                                                    var requiredValueDisplay = isNaN(requiredValue) ? null : (Math.abs(requiredValue - Math.round(requiredValue)) &lt; 0.0001 ? String(Math.round(requiredValue)) : String(requiredValue));
+
+                                                    // Function to validate percentage
+                                                    function validateShareholderPercentage() {
+                                                        var enteredValue = parseFloat(shareholderInput.value);
+
+                                                        if (isNaN(enteredValue)) {
+                                                            shareholderErrorDiv.innerHTML = 'Please enter a valid percentage value.';
+                                                            shareholderErrorDiv.classList.remove('d-none');
+                                                            shareholderInput.classList.add('is-invalid');
+                                                            return false;
+                                                        }
+
+                                                        // If a required remaining percentage is defined, ensure entered remaining
+
+<!--                                                        if (!isNaN(requiredValue) &amp;&amp; enteredValue &gt; requiredValue) {-->
+<!--                                                            shareholderErrorDiv.innerHTML = 'Maximum allowed: ' + requiredValueDisplay + '%. You entered ' + enteredValue + '%.';-->
+<!--                                                            shareholderErrorDiv.classList.remove('d-none');-->
+<!--                                                            shareholderInput.classList.add('is-invalid');-->
+<!--                                                            return false;-->
+<!--                                                        }-->
+
+                                                        // Otherwise it's fine
+                                                        shareholderErrorDiv.classList.add('d-none');
+                                                        shareholderInput.classList.remove('is-invalid');
+                                                        return true;
+                                                    }
+
+                                                    // Real-time validation as user types
+                                                    shareholderInput.addEventListener('input', function() {
+                                                        var enteredValue = parseFloat(this.value);
+
+                                                        if (!isNaN(enteredValue)) {
+                                                            if (!isNaN(requiredValue) &amp;&amp; enteredValue &gt; requiredValue) {
+                                                                 var reqText = requiredValueDisplay + '%';
+                                                                 shareholderErrorDiv.innerHTML = 'Maximum allowed: ' + reqText + '. You entered ' + enteredValue + '%.';
+                                                                 shareholderErrorDiv.classList.remove('d-none');
+                                                                 shareholderInput.classList.add('is-invalid');
+                                                                 if (submitButton) submitButton.disabled = true;
+                                                            } else {
+                                                                shareholderErrorDiv.classList.add('d-none');
+                                                                shareholderInput.classList.remove('is-invalid');
+                                                                if (submitButton) submitButton.disabled = false;
+                                                            }
+                                                        } else {
+                                                            // if cleared, hide error
+                                                            shareholderErrorDiv.classList.add('d-none');
+                                                            shareholderInput.classList.remove('is-invalid');
+                                                            if (submitButton) submitButton.disabled = false;
+                                                        }
+                                                    });
+
+                                                    // Validate on form submission (most reliable method)
+                                                    form.addEventListener('submit', function(e) {
+                                                        if (!validateShareholderPercentage()) {
+                                                            e.preventDefault();
+                                                            e.stopPropagation();
+                                                            shareholderInput.focus();
+                                                            window.scrollTo({top: shareholderInput.offsetTop - 200, behavior: 'smooth'});
+                                                            return false;
+                                                        }
+                                                    });
+
+                                                    // Validate on button click as backup
+                                                    if (submitButton) {
+                                                        submitButton.addEventListener('click', function(e) {
+                                                            if (!validateShareholderPercentage()) {
+                                                                e.preventDefault();
+                                                                e.stopPropagation();
+                                                                shareholderInput.focus();
+                                                                window.scrollTo({top: shareholderInput.offsetTop - 200, behavior: 'smooth'});
+                                                                return false;
+                                                            }
+                                                        });
+                                                    }
+                                                }
+                                            })();
+                                        </script>
+                                        </t>
+                                        <!-- End AGENCY INFORMATION Section -->
+
+                                        <!-- NEW EMAIL OTP JavaScript (for Change Mode) - Runs in both modes -->
+                                        <script type="text/javascript">
+                                            // ============================================
+                                            // NEW EMAIL OTP FUNCTIONS (for Change Mode)
+                                            // ============================================
+
+                                            // Show verify button when new email is entered
+                                            document.addEventListener('DOMContentLoaded', function() {
+                                                const newEmailInput = document.getElementById('new_email');
+                                                if (newEmailInput) {
+                                                    newEmailInput.addEventListener('input', function() {
+                                                        const verifyBtn = document.getElementById('btn_verify_new_email');
+                                                        if (verifyBtn) {
+                                                            if (this.value.trim()) {
+                                                                verifyBtn.style.display = 'inline-block';
+                                                            } else {
+                                                                verifyBtn.style.display = 'none';
+                                                                const otpSection = document.getElementById('new_email_otp_section');
+                                                                const verifiedSection = document.getElementById('new_email_verified');
+                                                                if (otpSection) otpSection.style.display = 'none';
+                                                                if (verifiedSection) verifiedSection.style.display = 'none';
+                                                            }
+                                                        }
+                                                    });
+                                                }
+                                            });
+
+                                            function sendNewEmailOTP() {
+                                                const emailInput = document.getElementById('new_email');
+                                                const newEmail = emailInput ? emailInput.value.trim() : '';
+                                                const changeTokenInput = document.querySelector('input[name="change_token"]');
+                                                const changeToken = changeTokenInput ? changeTokenInput.value : '';
+
+                                                if (!newEmail) {
+                                                    alert('Please enter a new email address first.');
+                                                    return;
+                                                }
+
+                                                // Validate email format
+                                                const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+                                                if (!emailRegex.test(newEmail)) {
+                                                    alert('Please enter a valid email address format.');
+                                                    return;
+                                                }
+
+                                                if (!changeToken) {
+                                                    alert('Invalid session. Please refresh the page.');
+                                                    return;
+                                                }
+
+                                                const verifyBtn = document.getElementById('btn_verify_new_email');
+                                                const originalText = verifyBtn ? verifyBtn.textContent : 'Verify';
+                                                if (verifyBtn) {
+                                                    verifyBtn.disabled = true;
+                                                    verifyBtn.textContent = 'Sending...';
+                                                }
+
+                                                // Send AJAX request
+                                                fetch('/cif/change/send-new-email-otp', {
+                                                    method: 'POST',
+                                                    headers: {
+                                                        'Content-Type': 'application/json',
+                                                    },
+                                                    body: JSON.stringify({
+                                                        'jsonrpc': '2.0',
+                                                        'method': 'call',
+                                                        'params': {
+                                                            'token': changeToken,
+                                                            'new_email': newEmail
+                                                        }
+                                                    })
+                                                })
+                                                .then(response => response.json())
+                                                .then(data => {
+                                                    if (data.result &amp;&amp; data.result.success) {
+                                                        alert('Verification code sent to ' + newEmail);
+                                                        const otpSection = document.getElementById('new_email_otp_section');
+                                                        if (otpSection) otpSection.style.display = 'block';
+                                                        if (verifyBtn) verifyBtn.style.display = 'none';
+                                                        startNewEmailResendCountdown(120);
+                                                    } else {
+                                                        alert('Error: ' + (data.result ? data.result.message : 'Failed to send code'));
+                                                        if (verifyBtn) {
+                                                            verifyBtn.disabled = false;
+                                                            verifyBtn.textContent = originalText;
+                                                        }
+                                                    }
+                                                })
+                                                .catch(error => {
+                                                    alert('Network error. Please try again.');
+                                                    if (verifyBtn) {
+                                                        verifyBtn.disabled = false;
+                                                        verifyBtn.textContent = originalText;
+                                                    }
+                                                });
+                                            }
+
+                                            function verifyNewEmailOTP() {
+                                                const otpInput = document.getElementById('new_email_otp_code');
+                                                const otpCode = otpInput ? otpInput.value.trim() : '';
+                                                const changeTokenInput = document.querySelector('input[name="change_token"]');
+                                                const changeToken = changeTokenInput ? changeTokenInput.value : '';
+
+                                                if (!otpCode) {
+                                                    alert('Please enter the verification code.');
+                                                    return;
+                                                }
+
+                                                if (!changeToken) {
+                                                    alert('Invalid session. Please refresh the page.');
+                                                    return;
+                                                }
+
+                                                fetch('/cif/change/verify-new-email-otp', {
+                                                    method: 'POST',
+                                                    headers: {
+                                                        'Content-Type': 'application/json',
+                                                    },
+                                                    body: JSON.stringify({
+                                                        'jsonrpc': '2.0',
+                                                        'method': 'call',
+                                                        'params': {
+                                                            'token': changeToken,
+                                                            'otp_code': otpCode
+                                                        }
+                                                    })
+                                                })
+                                                .then(response => response.json())
+                                                .then(data => {
+                                                    if (data.result &amp;&amp; data.result.success) {
+                                                        alert('New email verified successfully!');
+                                                        const otpSection = document.getElementById('new_email_otp_section');
+                                                        const verifiedSection = document.getElementById('new_email_verified');
+                                                        const emailInput = document.getElementById('new_email');
+                                                        if (otpSection) otpSection.style.display = 'none';
+                                                        if (verifiedSection) verifiedSection.style.display = 'block';
+                                                        if (emailInput) emailInput.readOnly = true;
+                                                    } else {
+                                                        alert(data.result ? data.result.message : 'Invalid verification code.');
+                                                    }
+                                                })
+                                                .catch(error => {
+                                                    alert('Network error. Please try again.');
+                                                });
+                                            }
+
+                                            function resendNewEmailOTP() {
+                                                const changeTokenInput = document.querySelector('input[name="change_token"]');
+                                                const changeToken = changeTokenInput ? changeTokenInput.value : '';
+
+                                                if (!changeToken) {
+                                                    alert('Invalid session. Please refresh the page.');
+                                                    return;
+                                                }
+
+                                                const resendBtn = document.getElementById('resend_new_email');
+                                                if (resendBtn) {
+                                                    resendBtn.disabled = true;
+                                                    resendBtn.textContent = 'Sending...';
+                                                }
+
+                                                fetch('/cif/change/resend-new-email-otp', {
+                                                    method: 'POST',
+                                                    headers: {
+                                                        'Content-Type': 'application/json',
+                                                    },
+                                                    body: JSON.stringify({
+                                                        'jsonrpc': '2.0',
+                                                        'method': 'call',
+                                                        'params': {
+                                                            'token': changeToken
+                                                        }
+                                                    })
+                                                })
+                                                .then(response => response.json())
+                                                .then(data => {
+                                                    if (data.result &amp;&amp; data.result.success) {
+                                                        alert('New verification code sent!');
+                                                        startNewEmailResendCountdown(120);
+                                                    } else {
+                                                        alert('Error: ' + (data.result ? data.result.message : 'Failed to resend'));
+                                                        if (data.result &amp;&amp; data.result.cooldown_remaining) {
+                                                            startNewEmailResendCountdown(data.result.cooldown_remaining);
+                                                        } else if (resendBtn) {
+                                                            resendBtn.disabled = false;
+                                                            resendBtn.textContent = 'Resend Code';
+                                                        }
+                                                    }
+                                                })
+                                                .catch(error => {
+                                                    alert('Network error. Please try again.');
+                                                    if (resendBtn) {
+                                                        resendBtn.disabled = false;
+                                                        resendBtn.textContent = 'Resend Code';
+                                                    }
+                                                });
+                                            }
+
+                                            function startNewEmailResendCountdown(seconds) {
+                                                const resendBtn = document.getElementById('resend_new_email');
+                                                const timerElement = document.getElementById('resend_new_email_timer');
+
+                                                if (resendBtn) resendBtn.style.display = 'none';
+
+                                                const countdown = setInterval(function() {
+                                                    const minutes = Math.floor(seconds / 60);
+                                                    const remainingSeconds = seconds % 60;
+                                                    if (timerElement) {
+                                                        timerElement.textContent = 'Resend available in ' + minutes + ':' + remainingSeconds.toString().padStart(2, '0');
+                                                    }
+
+                                                    if (seconds &lt;= 0) {
+                                                        clearInterval(countdown);
+                                                        if (timerElement) timerElement.textContent = '';
+                                                        if (resendBtn) {
+                                                            resendBtn.style.display = 'inline';
+                                                            resendBtn.disabled = false;
+                                                            resendBtn.textContent = 'Resend Code';
+                                                        }
+                                                    }
+                                                    seconds--;
+                                                }, 1000);
+                                            }
+                                        </script>
+
+                                        <div class="form-group row mt-5">
+                                            <div class="col-12">
+<!--                                                 <a href="#" role="button" class="btn btn-primary btn-lg w-100 s_website_form_send">-->
+                                                <button type="submit" class="btn btn-primary btn-lg w-100" id="submit_cif_form">
+                                                   Submit Information
+                                                 </button>
+
+                                                <span id="s_website_form_result"> </span>
+                                            </div>
+                                        </div>
+                                    </form>
+                                    <div class="s_website_form_end_message d-none">
+                                        <div class="jumbotron text-center bg-light p-5 rounded">
+                                            <h1 class="display-4 text-success">Thank You!</h1>
+                                            <p class="lead">Your information has been submitted successfully.</p>
+                                            <hr class="my-4"/>
+                                            <p>We will review your submission and get in touch if any further
+                                                information is
+                                                required.
+                                            </p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </t>
+        </template>
+    </data>
+</odoo>
+

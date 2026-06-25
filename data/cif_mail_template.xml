@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="email_template_cif_form" model="mail.template">
+        <field name="name">Client Information Form (CIF) Request</field>
+        <field name="model_id" ref="sale.model_sale_order"/>
+        <field name="subject">Complete Customer Information Form (CIF) – {{ object.project_id.name }} | Unit {{ object.product_name or 'n/a' }}</field>
+        <field name="email_to">{{ object.agent_id.email_formatted or '' }}</field>
+        <field name="body_html" type="html">
+            <div style="font-family: Arial, sans-serif; font-size: 13px;">
+                <p>Greetings from 7th Key!</p>
+                <p>
+                    Please find attached your Customer Information Form (CIF) for <t t-out="object.project_id.name or ''"/>, Unit <t t-out="object.product_name or ''"/>.
+                </p>
+                <p>
+                    Kindly review, complete, and sign the form for us to proceed with your KYC verification.
+                </p>
+                <p>
+                    Should you have any questions, please feel free to contact us at +971 52 327 7770 or email us at <a href="mailto:ce@7thkeys.com">ce@7thkeys.com</a>.
+                </p>
+                <p style="margin: 16px 0px; text-align: center;">
+                    <a t-attf-href="{{ ctx.get('base_url') or '' }}"
+                       style="background-color: #875A7B; color: #FFFFFF; padding: 10px 20px; text-decoration: none; border-radius: 5px;">
+                        Complete Client CIF Form
+                    </a>
+                </p>
+                <p style="margin-top: 20px;">
+                    Best regards,
+                    <br/><br/>
+                    7th Key
+                </p>
+            </div>
+        </field>
+        <field name="lang">{{ object.agent_id.lang }}</field>
+        <field name="auto_delete" eval="True"/>
+    </record>
+</odoo>

@@ -1,0 +1,45 @@
+<?xml version='1.0' encoding='utf-8'?>
+<odoo>
+    <!-- Extend security.question.answer views to include cif_form_id field -->
+
+    <record id="view_security_question_answer_list_cif" model="ir.ui.view">
+        <field name="name">security.question.answer.list.cif</field>
+        <field name="model">security.question.answer</field>
+        <field name="inherit_id" ref="seventh_key_custom.view_security_question_answer_list"/>
+        <field name="arch" type="xml">
+            <list position="inside">
+                <field name="cif_form_id"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="view_security_question_answer_form_cif" model="ir.ui.view">
+        <field name="name">security.question.answer.form.cif</field>
+        <field name="model">security.question.answer</field>
+        <field name="inherit_id" ref="seventh_key_custom.view_security_question_answer_form"/>
+        <field name="arch" type="xml">
+            <field name="partner_id" position="after">
+                <field name="cif_form_id" readonly="cif_form_id"/>
+            </field>
+        </field>
+    </record>
+
+    <record id="view_security_question_answer_search_cif" model="ir.ui.view">
+        <field name="name">security.question.answer.search.cif</field>
+        <field name="model">security.question.answer</field>
+        <field name="inherit_id" ref="seventh_key_custom.view_security_question_answer_search"/>
+        <field name="arch" type="xml">
+            <field name="partner_id" position="after">
+                <field name="cif_form_id"/>
+            </field>
+            <filter name="filter_partner" position="after">
+                <filter string="By CIF Form" name="filter_cif_form" domain="[]" context="{'group_by': 'cif_form_id'}"/>
+            </filter>
+            <filter name="group_partner" position="after">
+                <filter string="CIF Form" name="group_cif_form" context="{'group_by': 'cif_form_id'}"/>
+            </filter>
+        </field>
+    </record>
+
+</odoo>
+

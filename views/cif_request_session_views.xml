@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- CIF Request Session: basic list/form so users can audit tokens + quota -->
+    <record id="view_cif_request_session_list" model="ir.ui.view">
+        <field name="name">cif.request.session.list</field>
+        <field name="model">cif.request.session</field>
+        <field name="arch" type="xml">
+            <list string="CIF Request Sessions" default_order="create_date desc" create="false">
+                <field name="name"/>
+                <field name="sale_order_id"/>
+                <field name="customer_type"/>
+                <field name="state"/>
+                <field name="email_sent_to"/>
+                <field name="email_sent_cc"/>
+                <field name="allowed_submissions"/>
+                <field name="submitted_count"/>
+                <field name="expires_at" optional="hide"/>
+                <field name="create_date" optional="hide"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="view_cif_request_session_form" model="ir.ui.view">
+        <field name="name">cif.request.session.form</field>
+        <field name="model">cif.request.session</field>
+        <field name="arch" type="xml">
+            <form string="CIF Request Session">
+                <sheet>
+                    <group>
+                        <field name="name" readonly="1"/>
+                        <field name="sale_order_id" readonly="1"/>
+                        <field name="customer_type" readonly="1"/>
+                        <field name="state" readonly="1"/>
+                    </group>
+                    <group string="Quota">
+                        <field name="allowed_submissions" readonly="1"/>
+                        <field name="submitted_count" readonly="1"/>
+                        <field name="expires_at"/>
+                    </group>
+                    <group string="Email Tracking">
+                        <field name="email_sent_to" readonly="1"/>
+                        <field name="email_sent_cc" readonly="1"/>
+                    </group>
+                    <group string="Token">
+                        <field name="cif_token" readonly="1"/>
+                    </group>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <record id="action_cif_request_session" model="ir.actions.act_window">
+        <field name="name">CIF Request Sessions</field>
+        <field name="res_model">cif.request.session</field>
+        <field name="view_mode">list,form</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                No CIF request sessions yet.
+            </p>
+            <p>
+                A new CIF request session is created each time you send a CIF form link.
+            </p>
+        </field>
+    </record>
+</odoo>

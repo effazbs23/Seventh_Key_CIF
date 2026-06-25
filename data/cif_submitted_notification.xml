@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="email_template_cif_submitted" model="mail.template">
+        <field name="name">Sale Order - CIF Submitted Notification</field>
+        <field name="model_id" ref="sale.model_sale_order"/>
+        <field name="subject">CIF Submitted for : {{ object.name }}</field>
+        <field name="email_from">{{ (user.email_formatted) or ('noreply@yourcompany.com')}}</field>
+        <field name="email_to">{{ object.user_id.partner_id.email }}</field>
+        <field name="body_html" type="html">
+            <div style="font-family: Arial, sans-serif; font-size: 13px;">
+                <p>Hello,</p>
+                <p>The following Sale Order CIF has been <strong>Submitted</strong>:</p>
+                <p><strong>Sale Order:</strong> <t t-out="object.name"/></p>
+                <p><strong>CIF Number:</strong> <t t-out="ctx.get('cif_form_name', 'N/A')"/></p>
+
+                <p style="margin-top: 20px;">
+                    <a t-attf-href="{{ ctx.get('base_url', '') }}/web#id={{ ctx.get('cif_form_id') }}&amp;model=cif.form&amp;view_type=form"
+                       style="background-color: #875A7B; color: #FFFFFF; padding: 10px 20px; text-decoration: none; border-radius: 5px;">
+                        View CIF Form
+                    </a>
+                </p>
+
+                <p style="margin-top: 20px;">
+                    Thank you,<br/>
+                    <t t-out="object.company_id.name or ''"/>
+                </p>
+            </div>
+        </field>
+        <field name="lang">{{ object.partner_id.lang or 'en_US' }}</field>
+        <field name="auto_delete" eval="True"/>
+    </record>
+</odoo>

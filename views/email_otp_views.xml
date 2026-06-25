@@ -1,0 +1,71 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data>
+        <!-- Email OTP List View -->
+        <record id="view_email_otp_list" model="ir.ui.view">
+            <field name="name">email.otp.list</field>
+            <field name="model">email.otp</field>
+            <field name="arch" type="xml">
+                <list string="Email OTPs">
+                    <field name="email_address"/>
+                    <field name="field_type"/>
+                    <field name="is_verified"/>
+                    <field name="expiry_time"/>
+                    <field name="attempts"/>
+                    <field name="created_date"/>
+                    <field name="cif_form_id"/>
+                </list>
+            </field>
+        </record>
+
+        <!-- Email OTP Form View -->
+        <record id="view_email_otp_form" model="ir.ui.view">
+            <field name="name">email.otp.form</field>
+            <field name="model">email.otp</field>
+            <field name="arch" type="xml">
+                <form string="Email OTP">
+                    <sheet>
+                        <group>
+                            <group>
+                                <field name="email_address"/>
+                                <field name="field_type"/>
+                                <field name="otp_code" readonly="1"/>
+                                <field name="is_verified"/>
+                            </group>
+                            <group>
+                                <field name="expiry_time"/>
+                                <field name="attempts"/>
+                                <field name="max_attempts"/>
+                                <field name="created_date"/>
+                                <field name="cif_form_id"/>
+                            </group>
+                        </group>
+                    </sheet>
+                </form>
+            </field>
+        </record>
+
+        <!-- Email OTP Action -->
+        <record id="action_email_otp" model="ir.actions.act_window">
+            <field name="name">Email OTPs</field>
+            <field name="res_model">email.otp</field>
+            <field name="view_mode">list,form</field>
+            <field name="help" type="html">
+                <p class="o_view_nocontent_smiling_face">
+                    No email OTP records found.
+                </p>
+                <p>
+                    This view shows all email verification OTP records.
+                    OTP records are automatically cleaned up after expiration.
+                </p>
+            </field>
+        </record>
+
+        <!-- Email OTP Menu -->
+        <menuitem id="menu_email_otp"
+                  name="Email OTPs"
+                  parent="base.menu_administration"
+                  action="action_email_otp"
+                  sequence="100"/>
+    </data>
+</odoo>

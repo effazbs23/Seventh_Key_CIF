@@ -1,0 +1,6 @@
+id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
+access_cif_form_user,cif.form.user,model_cif_form,base.group_user,1,1,1,1
+access_cif_form_reject_reason_wizard_user,cif.form.reject.reason.wizard.user,model_cif_form_reject_reason_wizard,base.group_user,1,1,1,1
+access_cif_change_request_user,cif.change.request.user,model_cif_change_request,base.group_user,1,1,1,1
+access_cif_request_session_user,cif.request.session.user,model_cif_request_session,base.group_user,1,1,1,1
+access_email_otp_user,email.otp.user,model_email_otp,base.group_user,1,1,1,1

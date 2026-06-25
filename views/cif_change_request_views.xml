@@ -1,0 +1,202 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- CIF Change Request: Tree/List -->
+    <record id="view_cif_change_request_tree" model="ir.ui.view">
+        <field name="name">cif.change.request.tree</field>
+        <field name="model">cif.change.request</field>
+        <field name="arch" type="xml">
+            <list string="CIF Change Requests" create="false">
+                <field name="name"/>
+                <field name="state"/>
+                <field name="workflow_state"/>
+                <field name="sale_order_id"/>
+                <field name="cif_form_id"/>
+                <field name="purchaser_line_id"/>
+                <field name="snapshot_partner_name" string="Partner"/>
+                <field name="snapshot_partner_email" string="Email"/>
+                <field name="snapshot_share_percentage" string="Share %"/>
+                <field name="is_email_verified" string="Email ✓"/>
+                <field name="is_security_verified" string="Security ✓"/>
+                <field name="security_attempts" string="Sec. Attempts"/>
+                <field name="security_locked_until" string="Locked Until"
+                       decoration-danger="security_locked_until and security_locked_until &gt; context_today()"/>
+                <field name="sent_by"/>
+                <field name="create_date"/>
+                <field name="opened_at"/>
+                <field name="done_at"/>
+                <field name="expires_at"/>
+            </list>
+        </field>
+    </record>
+
+    <!-- CIF Change Request: Form -->
+    <record id="view_cif_change_request_form" model="ir.ui.view">
+        <field name="name">cif.change.request.form</field>
+        <field name="model">cif.change.request</field>
+        <field name="arch" type="xml">
+            <form string="CIF Change Request">
+                <header>
+                    <button name="action_expire" type="object" string="Expire" class="btn-secondary" invisible="state in ('done','expired')"/>
+                    <field name="state" widget="statusbar" statusbar_visible="draft,done,expired"/>
+                </header>
+                <sheet>
+                    <div class="oe_title">
+                        <h1>
+                            <field name="name" readonly="1"/>
+                        </h1>
+                    </div>
+
+                    <group>
+                        <group>
+                            <field name="sale_order_id" readonly="1"/>
+                            <field name="cif_form_id" readonly="1"/>
+                            <field name="purchaser_line_id" readonly="1"/>
+                            <field name="partner_id" readonly="1"/>
+                        </group>
+                        <group>
+                            <field name="email_to" readonly="1"/>
+                            <field name="sent_by" readonly="1"/>
+                            <field name="create_date" readonly="1"/>
+                        </group>
+                    </group>
+
+                    <group string="Snapshot (at request time)">
+                        <group>
+                            <field name="snapshot_partner_name" readonly="1"/>
+                            <field name="snapshot_partner_email" readonly="1"/>
+                        </group>
+                        <group>
+                            <field name="snapshot_share_percentage" readonly="1"/>
+                            <field name="snapshot_cif_no" readonly="1"/>
+                        </group>
+                    </group>
+
+                    <group string="Timeline">
+                        <group>
+                            <field name="opened_at" readonly="1"/>
+                            <field name="done_at" readonly="1"/>
+                        </group>
+                        <group>
+                            <field name="expires_at" readonly="1"/>
+                        </group>
+                    </group>
+
+                    <group string="Email Verification">
+                        <group>
+                            <field name="is_email_verified" readonly="1"/>
+                            <field name="email_verified_at" readonly="1"/>
+                        </group>
+                    </group>
+
+                    <group string="New Email Change (CIF Data)">
+                        <group>
+                            <field name="new_email" readonly="1"/>
+                            <field name="is_new_email_verified" readonly="1"/>
+                            <field name="new_email_verified_at" readonly="1"/>
+                        </group>
+                        <group>
+                            <field name="new_email_otp_attempts" readonly="1"/>
+                            <field name="new_email_otp_max_attempts" readonly="1"/>
+                            <field name="new_email_otp_sent_at" readonly="1"/>
+                        </group>
+                    </group>
+
+                    <group string="Security Questions Verification">
+                        <group>
+                            <field name="is_security_verified" readonly="1"/>
+                            <field name="security_verified_at" readonly="1"/>
+                            <field name="security_attempts" readonly="1"/>
+                            <field name="security_max_attempts" readonly="1"/>
+                        </group>
+                        <group>
+                            <field name="security_locked_until" readonly="1"
+                                   decoration-danger="security_locked_until and security_locked_until &gt; context_today()"
+                                   widget="remaining_time"/>
+                        </group>
+                    </group>
+
+                    <group string="Workflow State">
+                        <group>
+                            <field name="workflow_state" readonly="1"/>
+                            <field name="current_step" readonly="1"/>
+                        </group>
+                        <group>
+                            <field name="step_token_expires_at" readonly="1"/>
+                        </group>
+                    </group>
+
+                    <group string="Tracking">
+                        <group>
+                            <field name="used_ip" readonly="1"/>
+                        </group>
+                        <group>
+                            <field name="used_user_agent" readonly="1"/>
+                        </group>
+                    </group>
+
+                    <group string="Technical" groups="base.group_system">
+                        <group>
+                            <field name="token" readonly="1"/>
+                        </group>
+                    </group>
+                </sheet>
+                <chatter/>
+            </form>
+        </field>
+    </record>
+
+    <!-- CIF Change Request: Search/Filter -->
+    <record id="view_cif_change_request_search" model="ir.ui.view">
+        <field name="name">cif.change.request.search</field>
+        <field name="model">cif.change.request</field>
+        <field name="arch" type="xml">
+            <search string="CIF Change Requests">
+                <field name="name"/>
+                <field name="sale_order_id"/>
+                <field name="snapshot_partner_name"/>
+                <field name="snapshot_partner_email"/>
+                <field name="email_to"/>
+
+                <filter string="Currently Locked" name="currently_locked"
+                        domain="[('security_locked_until', '!=', False), ('security_locked_until', '&gt;', datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S'))]"/>
+                <filter string="Failed Attempts" name="failed_attempts"
+                        domain="[('security_attempts', '&gt;', 0)]"/>
+                <filter string="Email Not Verified" name="email_not_verified"
+                        domain="[('is_email_verified', '=', False), ('state', '=', 'draft')]"/>
+                <filter string="Security Not Verified" name="security_not_verified"
+                        domain="[('is_security_verified', '=', False), ('is_email_verified', '=', True)]"/>
+                <separator/>
+                <filter string="Draft" name="state_draft" domain="[('state', '=', 'draft')]"/>
+                <filter string="Done" name="state_done" domain="[('state', '=', 'done')]"/>
+                <filter string="Expired" name="state_expired" domain="[('state', '=', 'expired')]"/>
+                <separator/>
+                <filter string="My Requests" name="my_requests" domain="[('sent_by', '=', uid)]"/>
+                <separator/>
+                <group expand="0" string="Group By">
+                    <filter string="State" name="group_state" context="{'group_by': 'state'}"/>
+                    <filter string="Workflow State" name="group_workflow_state" context="{'group_by': 'workflow_state'}"/>
+                    <filter string="Sale Order" name="group_sale_order" context="{'group_by': 'sale_order_id'}"/>
+                    <filter string="Sent By" name="group_sent_by" context="{'group_by': 'sent_by'}"/>
+                    <filter string="Created Date" name="group_create_date" context="{'group_by': 'create_date'}"/>
+                </group>
+            </search>
+        </field>
+    </record>
+
+    <!-- Action -->
+    <record id="action_cif_change_requests" model="ir.actions.act_window">
+        <field name="name">CIF Change Requests</field>
+        <field name="res_model">cif.change.request</field>
+        <field name="view_mode">list,form</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">No CIF change requests found.</p>
+        </field>
+    </record>
+
+    <!-- Menu (under existing Sales config where CIF menu is placed) -->
+    <menuitem id="menu_cif_change_requests"
+              name="CIF Change Requests"
+              parent="sale.menu_sales_config"
+              action="action_cif_change_requests"
+              sequence="16"/>
+</odoo>

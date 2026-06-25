@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data>
+        <!-- Add CIF smart button to res.partner form view -->
+        <record id="view_partner_form_inherit_cif" model="ir.ui.view">
+            <field name="name">res.partner.form.inherit.cif</field>
+            <field name="model">res.partner</field>
+            <field name="inherit_id" ref="base.view_partner_form"/>
+            <field name="arch" type="xml">
+                <div name="button_box" position="inside">
+                    <button name="action_view_cif_forms"
+                            type="object"
+                            class="oe_stat_button"
+                            icon="fa-id-card-o"
+                            invisible="cif_form_count == 0">
+                        <field name="cif_form_count" widget="statinfo" string="CIF Forms"/>
+                    </button>
+                </div>
+            </field>
+        </record>
+    </data>
+</odoo>
+

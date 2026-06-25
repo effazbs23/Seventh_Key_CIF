@@ -1,0 +1,97 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- Security Questions Verification Template for Change CIF -->
+    <template id="cif_change_security_verify_template" name="Change CIF - Security Questions Verification">
+        <t t-call="website.layout">
+            <div id="wrap" class="oe_structure">
+                <section class="s_cover pt96 pb96">
+                    <div class="container">
+                        <div class="row">
+                            <div class="col-lg-8 offset-lg-2">
+                                <div class="card shadow-lg">
+                                    <div class="card-header bg-primary text-white text-center">
+                                        <h3 class="mb-0">
+                                            <i class="fa fa-shield"/> Security Questions Verification
+                                        </h3>
+                                        <p class="mb-0 mt-2">Step 2 of 2: Answer security questions to proceed</p>
+                                    </div>
+                                    <div class="card-body p-4">
+                                        <t t-if="error_message">
+                                            <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                                                <i class="fa fa-exclamation-circle"/> <t t-esc="error_message"/>
+                                                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                                            </div>
+                                        </t>
+
+                                        <t t-if="attempts_remaining is not None and attempts_remaining > 0">
+                                            <div class="alert alert-warning">
+                                                <i class="fa fa-warning"/> <strong>Attempts remaining:</strong> <t t-esc="attempts_remaining"/>
+                                            </div>
+                                        </t>
+
+                                        <form method="POST" action="/client-information-form/change/verify-security">
+                                            <input type="hidden" name="csrf_token" t-att-value="request.csrf_token()"/>
+                                            <input type="hidden" name="token" t-att-value="token"/>
+                                            <input type="hidden" name="step_token" t-att-value="step_token"/>
+
+                                            <div class="alert alert-info mb-4">
+                                                <i class="fa fa-info-circle"/> Please answer the following security questions to verify your identity.
+                                            </div>
+
+                                            <t t-if="security_questions">
+                                                <t t-foreach="security_questions" t-as="question">
+                                                    <div class="form-group mb-4">
+                                                        <label t-att-for="'answer_' + str(question.id)" class="col-form-label">
+                                                            <strong>Question <t t-esc="question_index + 1"/>:</strong>
+                                                            <t t-esc="question.question"/>
+                                                            <span class="text-danger">*</span>
+                                                        </label>
+                                                        <input type="text"
+                                                               class="form-control form-control-lg"
+                                                               t-att-name="'answer_' + str(question.id)"
+                                                               t-att-id="'answer_' + str(question.id)"
+                                                               t-att-maxlength="question.ans_max_length or 255"
+                                                               required="required"
+                                                               placeholder="Enter your answer"
+                                                               autocomplete="off"/>
+                                                        <small class="form-text text-muted">
+                                                            Answer must match exactly as you provided during registration.
+                                                        </small>
+                                                    </div>
+                                                </t>
+
+                                                <div class="text-center mt-4">
+                                                    <button type="submit" class="btn btn-primary btn-lg px-5">
+                                                        <i class="fa fa-check-circle"/> Verify Answers
+                                                    </button>
+                                                </div>
+                                            </t>
+
+                                            <t t-if="not security_questions">
+                                                <div class="alert alert-warning">
+                                                    <i class="fa fa-exclamation-triangle"/> No security questions configured for your account.
+                                                    Please contact support.
+                                                </div>
+                                                <div class="text-center mt-4">
+                                                    <a href="#" class="btn btn-secondary" onclick="window.history.back(); return false;">
+                                                        <i class="fa fa-arrow-left"/> Go Back
+                                                    </a>
+                                                </div>
+                                            </t>
+                                        </form>
+
+                                        <div class="text-center mt-4">
+                                            <small class="text-muted">
+                                                <i class="fa fa-lock"/> Your information is secure and encrypted
+                                            </small>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+            </div>
+        </t>
+    </template>
+</odoo>

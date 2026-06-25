@@ -1,0 +1,194 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data>
+        <!-- 1. Define the QWeb Report Template -->
+        <template id="report_cif_form_document">
+            <t t-call="web.html_container">
+                <t t-foreach="docs" t-as="doc">
+                    <t t-call="web.basic_layout">
+                        <div class="header" style="margin: 0; padding: 0;">
+                            <table class="table-borderless" style="width: 100%;">
+                                <tbody>
+                                    <tr style="font-weight: bold; vertical-align: middle;">
+                                        <td style="width: 20%"></td>
+                                        <td class="px-2" style="width: 50%; text-align: center;">
+                                            <h3 style="font-weight: bolder;">Client Information Form</h3>
+                                        </td>
+                                        <td class="px-2" style="width: 30%; text-align: end;">
+                                            <img src="/seventh_key_custom/static/src/img/7th-key.png"
+                                                 alt="Seventh Key Gateway Logo"
+                                                 style="width: 140px; height: 140px; float: inline-end;"/>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                        <div class="page">
+                            <h2>CIF No: <span t-field="doc.cif_no"/></h2>
+
+                            <p>
+                                <strong>Date Submitted:</strong>
+                                <span t-field="doc.create_date" t-options='{"widget": "date"}'/>
+                                <br/>
+                                <strong>Related Sales Order:</strong>
+                                <span t-field="doc.source_sale_order_id.name"/>
+                            </p>
+
+                            <!-- INDIVIDUAL -->
+                            <t t-if="doc.client_type == 'person'">
+                                <h3 class="mt-4">Client Details</h3>
+                                <table class="table table-sm table-bordered">
+                                    <tr>
+                                        <td><strong>Full Name:</strong></td>
+                                        <td>
+                                            <span t-esc="' '.join(filter(None, [doc.first_name or '', doc.middle_name or '', doc.last_name or '']))"/>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td><strong>Passport No:</strong></td>
+                                        <td><span t-field="doc.passport_no"/></td>
+                                    </tr>
+                                    <tr>
+                                        <td><strong>Nationality:</strong></td>
+                                        <td><span t-field="doc.nationality_id.name"/></td>
+                                    </tr>
+                                </table>
+                            </t>
+
+                            <!-- COMPANY -->
+                            <t t-if="doc.client_type == 'company'">
+                                <h3 class="mt-4">Company Details</h3>
+                                <table class="table table-sm table-bordered">
+                                    <tr>
+                                        <td><strong>Company Name:</strong></td>
+                                        <td><span t-field="doc.company_name"/></td>
+                                    </tr>
+                                    <tr>
+                                        <td><strong>Trade License No.:</strong></td>
+                                        <td><span t-field="doc.trade_license_no"/></td>
+                                    </tr>
+                                </table>
+
+                                <h3 class="mt-4">Shareholder Details</h3>
+                                <table class="table table-sm table-bordered">
+                                    <tr>
+                                        <td><strong>Shareholder Name:</strong></td>
+                                        <td><span t-field="doc.shareholder_name"/></td>
+                                    </tr>
+                                    <tr>
+                                        <td><strong>Title:</strong></td>
+                                        <td><span t-field="doc.shareholder_title.name"/></td>
+                                    </tr>
+                                    <tr>
+                                        <td><strong>Shareholder %:</strong></td>
+                                        <td><span t-field="doc.shareholder_percentage"/></td>
+                                    </tr>
+                                    <tr>
+                                        <td><strong>Passport No:</strong></td>
+                                        <td><span t-field="doc.passport_no"/></td>
+                                    </tr>
+                                    <tr>
+                                        <td><strong>Nationality:</strong></td>
+                                        <td><span t-field="doc.nationality_id.name"/></td>
+                                    </tr>
+                                </table>
+                            </t>
+
+                            <!-- ADDRESS & CONTACT (shared) -->
+                            <h3 class="mt-4">Address &amp; Contact</h3>
+                            <table class="table table-sm table-bordered">
+                                <tr>
+                                    <td><strong>Address:</strong></td>
+                                    <td>
+                                        <span t-field="doc.unit_villa_no"/>,
+                                        <span t-field="doc.building_name"/>
+                                        <br/>
+                                        <span t-field="doc.street_name"/>
+                                        <br/>
+                                        <span t-field="doc.city"/>,
+                                        <span t-field="doc.country_id.name"/>
+                                        <br/>
+                                        P.O. Box: <span t-field="doc.po_box"/>,
+                                        Postal Code: <span t-field="doc.postal_code"/>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Mobile No:</strong></td>
+                                    <td><span t-field="doc.mobile"/></td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Email:</strong></td>
+                                    <td><span t-field="doc.email"/></td>
+                                </tr>
+                            </table>
+
+                            <!-- OTHER INFORMATION -->
+                            <h3 class="mt-4">Other Information</h3>
+                            <table class="table table-sm table-bordered">
+                                <t t-if="doc.client_type == 'person'">
+                                    <tr>
+                                        <td><strong>Date of Birth:</strong></td>
+                                        <td><span t-field="doc.date_of_birth" t-options='{"widget": "date"}'/></td>
+                                    </tr>
+                                </t>
+                                <t t-if="doc.client_type == 'company'">
+                                    <tr>
+                                        <td><strong>Shareholder Date of Birth:</strong></td>
+                                        <td><span t-field="doc.date_of_birth" t-options='{"widget": "date"}'/></td>
+                                    </tr>
+                                </t>
+                                <tr>
+                                    <td><strong>Payment Plan:</strong></td>
+                                    <td><span t-field="doc.payment_plan.name"/></td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Mode of Payment:</strong></td>
+                                    <td><span t-field="doc.payment_method_line_id.name"/></td>
+                                </tr>
+                                <tr>
+                                    <td><strong>UAE Residency:</strong></td>
+                                    <td><span t-field="doc.uae_residency_status" t-options='{"widget": "selection"}'/></td>
+                                </tr>
+                            </table>
+
+                            <!-- SIGNATURE SECTION -->
+                            <div class="row mt-5 pt-5">
+                                <div class="col-6">
+                                    <p class="mb-0">
+                                        <t t-if="doc.client_type == 'company'">Authorized Signatory Signature:</t>
+                                        <t t-else="">Client Signature:</t>
+                                    </p>
+                                    <div class="signature-box border-bottom pb-2">
+                                        <img t-if="doc.signature" t-att-src="'/web/image/%s/%s/%s' % (doc._name, doc.id, 'signature')" style="max-height: 80px; max-width: 250px;"/>
+                                        <p t-else="" class="text-muted">(No signature provided)</p>
+                                    </div>
+                                    <p class="mt-2">
+                                        <t t-if="doc.client_type == 'company'">
+                                            <t t-esc="doc.company_name or ''"/>
+                                        </t>
+                                        <t t-else="">
+                                            <t t-esc="doc.first_name or ''"/>
+                                            <t t-esc="(' ' + doc.last_name) if doc.last_name else ''"/>
+                                        </t>
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                    </t>
+                </t>
+            </t>
+        </template>
+
+        <!-- 2. Define the Report Action -->
+        <record id="action_report_cif_form" model="ir.actions.report">
+            <field name="name">Client Information Form</field>
+            <field name="model">cif.form</field>
+            <field name="report_type">qweb-pdf</field>
+            <field name="report_name">bs_cif_process.report_cif_form_document</field>
+            <field name="report_file">bs_cif_process.report_cif_form_document</field>
+            <field name="print_report_name">'Client Information - %s' % (object.cif_no)</field>
+            <field name="binding_model_id" ref="model_cif_form"/>
+            <field name="binding_type">report</field>
+        </record>
+    </data>
+</odoo>

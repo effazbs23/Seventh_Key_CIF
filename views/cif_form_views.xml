@@ -1,0 +1,193 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- List View -->
+    <record id="view_cif_form_list" model="ir.ui.view">
+        <field name="name">cif.form.list</field>
+        <field name="model">cif.form</field>
+        <field name="arch" type="xml">
+            <list create="false" string="Client Information Forms" default_order="create_date desc">
+                <field name="cif_no"/>
+                <field name="state"/>
+                <field name="unit_no"/>
+                <field name="first_name"/>
+                <field name="last_name"/>
+                <field name="mobile"/>
+                <field name="is_mobile_verified" widget="boolean_toggle"/>
+                <field name="is_phone_verified" widget="boolean_toggle"/>
+                <field name="is_email_verified" widget="boolean_toggle"/>
+                <field name="is_email_address_verified" widget="boolean_toggle"/>
+                <field name="source_sale_order_id"/>
+                <field name="create_date"/>
+            </list>
+        </field>
+    </record>
+
+    <!-- Form View -->
+    <record id="view_cif_form_form" model="ir.ui.view">
+    <field name="name">cif.form.form.view</field>
+    <field name="model">cif.form</field>
+    <field name="arch" type="xml">
+        <form>
+            <header>
+            <button name="action_set_accepted"
+                type="object"
+                string="Accept"
+                class="btn-primary"
+                invisible="state in ('accepted', 'rejected')"/>
+            <button name="action_set_rejected"
+                type="object"
+                string="Reject"
+                class="btn-secondary"
+                invisible="state in ('accepted', 'rejected')"/>
+            <button name="action_set_draft"
+                type="object"
+                string="Set to Draft"
+                class="btn-secondary"
+                invisible="state == 'draft'"/>
+                <button name="action_send_cif_change_request"
+                        type="object"
+                        string="Send CIF Request"
+                        class="btn-primary"
+                        help="Create and send a CIF change request to the linked partner."/>
+            <field name="state" widget="statusbar" statusbar_visible="draft,accepted,rejected"/>
+            </header>
+            <sheet>
+                <div class="oe_title">
+                    <label for="cif_no" string="CIF No."/>
+                    <h1>
+                        <field name="cif_no" readonly="1" nolabel="1"/>
+                    </h1>
+                </div>
+
+                <group>
+                    <group>
+                        <field name="source_sale_order_id" readonly="1" options="{'no_create': True, 'no_open': False}"/>
+                        <field name="payment_plan" readonly="1"/>
+                        <field name="unit_no" readonly="1"/>
+                        <field name="created_partner_id" readonly="1" string="Created/Updated Partner"/>
+                        <field name="payment_type" readonly="1"/>
+                    </group>
+                    <group>
+                        <field name="client_type" widget="radio" options="{'horizontal': true}" readonly="1"/>
+                        <field name="create_date" readonly="1"/>
+                        <field name="passport_supporting_docs" widget="many2many_binary"/>
+                        <field name="emirates_id_supporting_docs" widget="many2many_binary"/>
+                    </group>
+                </group>
+
+                <!-- INDIVIDUAL FIELDS -->
+                <group string="Individual Client Details" invisible="client_type != 'person'">
+                    <group>
+                        <field name="first_name" readonly="1" />
+                        <field name="middle_name" readonly="1" />
+                        <field name="last_name" readonly="1" />
+                        <field name="passport_no" readonly="1" />
+                        <field name="nationality_id" readonly="1" />
+                        <field name="gender" readonly="1" />
+                    </group>
+                    <group>
+                        <field name="date_of_birth" readonly="1" />
+                        <field name="source_of_income" readonly="1" />
+                        <field name="uae_residency_status" readonly="1" />
+                    </group>
+                </group>
+
+                <!-- COMPANY FIELDS -->
+                <group string="Company Details" invisible="client_type != 'company'">
+                    <group>
+                        <field name="company_name" readonly="1"/>
+                        <field name="trade_license_no" readonly="1"/>
+                    </group>
+                    <group>
+                        <field name="shareholder_name" readonly="1"/>
+                        <field name="shareholder_title" readonly="1"/>
+                        <field name="shareholder_percentage" readonly="1"/>
+                        <field name="gender" readonly="1"/>
+                    </group>
+                </group>
+
+                <!-- COMMON FIELDS -->
+                <group string="Contact and Address">
+                    <group>
+                        <field name="unit_villa_no" readonly="1" />
+                        <field name="building_name" readonly="1" />
+                        <field name="street_name" readonly="1" />
+                        <field name="city" readonly="1" />
+                        <field name="country_id" readonly="1" />
+                        <field name="postal_code" readonly="1" />
+                    </group>
+                    <group>
+                        <field name="mobile" readonly="1"/>
+                        <field name="is_mobile_verified" readonly="1" widget="boolean_toggle"/>
+                        <field name="phone" readonly="1"/>
+                        <field name="is_phone_verified" readonly="1" widget="boolean_toggle"/>
+                        <field name="email" readonly="1"/>
+                        <field name="is_email_verified" readonly="1" widget="boolean_toggle"/>
+                        <field name="email_address" readonly="1"/>
+                        <field name="is_email_address_verified" readonly="1" widget="boolean_toggle"/>
+                    </group>
+                </group>
+                <group string="Client Signature">
+                    <field name="signature" widget="signature" nolabel="1" readonly="1"/>
+                </group>
+
+                <!-- AGENCY/AGENT DETAILS -->
+                <group string="Agency/Agent Details">
+                    <group>
+                        <field name="agent_id" readonly="1"/>
+                        <field name="agent_trade_license_no" readonly="1"/>
+                    </group>
+                    <group>
+                        <field name="agent_name" readonly="1"/>
+                        <field name="agent_mobile" readonly="1"/>
+                        <field name="agent_email" readonly="1"/>
+                    </group>
+                </group>
+
+                <notebook>
+                    <page name="security_questions" string="Security Questions">
+                        <field name="security_answer_ids" readonly="1">
+                            <list>
+                                <field name="sequence" widget="handle"/>
+                                <field name="question_id"/>
+                                <field name="answer"/>
+                            </list>
+                        </field>
+                    </page>
+                    <page name="cif_change_requests" string="CIF Change Requests">
+                        <field name="cif_change_request_ids" readonly="1">
+                            <list>
+                                <field name="name" string="Reference"/>
+                                <field name="state"/>
+                                <field name="snapshot_partner_name" string="Partner"/>
+                                <field name="snapshot_partner_email" string="Email"/>
+                                <field name="snapshot_share_percentage" string="Share %"/>
+                                <field name="sent_by"/>
+                                <field name="create_date"/>
+                                <field name="opened_at"/>
+                                <field name="done_at"/>
+                                <field name="expires_at" string="Expired At"/>
+                            </list>
+                        </field>
+                    </page>
+                </notebook>
+            </sheet>
+            <chatter />
+        </form>
+    </field>
+</record>
+
+    <!-- Menu Item -->
+    <record id="action_cif_form" model="ir.actions.act_window">
+        <field name="name">Client Information Forms</field>
+        <field name="res_model">cif.form</field>
+        <field name="view_mode">list,form</field>
+    </record>
+
+    <!-- CIF Menu Item -->
+    <menuitem id="menu_client_information_forms"
+              name="Client Information Forms"
+              parent="sale.menu_sales_config"
+              action="action_cif_form"
+              sequence="15"/>
+</odoo>

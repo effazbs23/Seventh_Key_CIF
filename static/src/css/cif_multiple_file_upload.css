@@ -1,0 +1,136 @@
+/* Attachment container */
+.o_attachments {
+    min-height: 50px;
+}
+
+.o_attachment {
+    position: relative;
+    margin-bottom: 0.5rem;
+}
+
+.o_attachment_wrap {
+    position: relative;
+    overflow: hidden;
+}
+
+/* Add Files Button */
+.oe_add .o_file_input .o_file_input_trigger {
+    display: inline-block;
+}
+
+.oe_add .o_file_input .o_attach {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 14px;
+    font-weight: 500;
+    padding: 0.5rem 1rem;
+    background-color: #eeeeee;
+    border: 1px solid #eeeeee;
+    color: rgb(0, 0, 0);
+    cursor: pointer;
+}
+
+.oe_add .o_file_input .o_attach:hover {
+    background-color: #e1e1e1;
+    border-color: #e1e1e1;
+}
+
+.oe_add .o_file_input .o_attach:active {
+    background-color: #545b62;
+    border-color: #4e555b;
+}
+
+.oe_add .o_file_input .o_attach .fa {
+    font-size: 14px;
+}
+
+/* Delete button - hidden by default, slides in on hover */
+.o_attachment .o_attachment_delete {
+    background: #5e5e5e;
+    color: white;
+    cursor: pointer;
+    font-size: 20px;
+    transform: translateX(100%);
+    transition: all 0.3s ease 0s;
+    position: absolute;
+    top: 0;
+    left: auto;
+    bottom: 0;
+    right: 0;
+    display: flex;
+    display: -webkit-box;
+    display: -webkit-flex;
+    align-items: center;
+    justify-content: center;
+    width: 45px;
+    z-index: 10;
+}
+
+/* Show delete button on hover */
+.o_attachment:hover .o_attachment_delete {
+    transition: all 0.1s ease 0s;
+    transform: translateX(0);
+}
+
+/* Delete button hover effect */
+.o_attachment .o_attachment_delete:hover {
+    background: #714B67;
+}
+
+/* Uploaded indicator */
+.o_attachment .o_attachment_uploaded {
+    position: absolute;
+    top: 0;
+    left: auto;
+    bottom: 0;
+    right: 0;
+    display: flex;
+    display: -webkit-box;
+    display: -webkit-flex;
+    align-items: center;
+    justify-content: center;
+    width: 45px;
+    transition: all 0.3s ease 0s;
+    z-index: 5;
+}
+
+/* Hide uploaded icon when delete button is visible */
+.o_attachment:hover .o_attachment_uploaded {
+    transform: translateX(100%);
+    transition: all 0.1s ease 0s;
+}
+
+/* File icon styling */
+.o_image_box {
+    flex-shrink: 0;
+}
+
+/* Caption truncation */
+.o_attachment .caption {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+/* Ensure attachment wrap has proper padding for delete button */
+.o_attachment_wrap {
+    padding-right: 50px;
+}
+
+/* File type icon colors */
+.fa-file-pdf-o {
+    color: #dc3545;
+}
+
+.fa-file-image-o {
+    color: #28a745;
+}
+
+.fa-file-word-o {
+    color: #2b579a;
+}
+
+.fa-file-o {
+    color: #6c757d;
+}

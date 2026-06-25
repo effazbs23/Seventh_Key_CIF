@@ -1,0 +1,74 @@
+<?xml version='1.0' encoding='utf-8'?>
+<odoo>
+    <!-- CIF-related extensions to sale.order form view -->
+    <record id="view_sale_order_form_cif_inherit" model="ir.ui.view">
+        <field name="name">sale.order.form.cif.inherit</field>
+        <field name="model">sale.order</field>
+        <field name="inherit_id" ref="seventh_key_custom.view_sale_order_form_inherit_seventh_key_custom"/>
+        <field name="arch" type="xml">
+            <!-- CIF Form Button and Technical Fields -->
+            <xpath expr="//button[@name='action_send_eoi_form']" position="after">
+                <field name="cif_form_id" invisible="1"/>
+                <button name="cif_form_mail"
+                        string="Send CIF Form"
+                        type="object"
+                        class="oe_highlight"
+                        invisible="state in ('draft','sale_approved','finance_approved','approved','sent', 'rejected', 'cancel')"/>
+            </xpath>
+
+            <xpath expr="//button[@name='action_send_kyc_mail']" position="attributes">
+                <attribute name="invisible">(state not in ('sale','in_cif')) or (state in ('sale','in_cif') and (kyc_verified == True or kyc_rejected == True))</attribute>
+            </xpath>
+
+            <xpath expr="//button[@name='action_kyc_verified']" position="attributes">
+                <attribute name="invisible">(state not in ('sale','in_cif')) or (state in ('sale','in_cif') and (kyc_verified == True or kyc_rejected == True))</attribute>
+            </xpath>
+
+            <xpath expr="//button[@name='action_kyc_reject']" position="attributes">
+                <attribute name="invisible">(state not in ('sale','in_cif')) or (state in ('sale','in_cif') and (kyc_verified == True or kyc_rejected == True))</attribute>
+            </xpath>
+
+            <!-- CIF Stat Buttons -->
+            <xpath expr="//button[@name='action_view_eoi_forms']" position="after">
+                <button class="oe_stat_button"
+                        name="action_view_cif_forms"
+                        type="object" widget="statinfo"
+                        icon="fa-id-card-o" string="CIF Form"
+                        invisible="not has_cif_form"/>
+                <button class="oe_stat_button"
+                        name="action_view_cif_request_sessions"
+                        type="object" icon="fa-link"
+                        invisible="cif_request_session_count == 0">
+                    <field name="cif_request_session_count" widget="statinfo" string="CIF Requests"/>
+                </button>
+            </xpath>
+
+            <!-- CIF Field in Purchaser Details -->
+            <xpath expr="//page[@name='booking_form_info']//field[@name='sale_order_purchaser_ids']//list//field[@name='share_percentage']" position="after">
+                <field name="cif_form_id" optional="hide"/>
+            </xpath>
+
+            <!-- CIF Field in Purchaser Form -->
+            <xpath expr="//page[@name='booking_form_info']//field[@name='sale_order_purchaser_ids']//form//group//field[@name='share_percentage']" position="after">
+                <field name="cif_form_id" readonly="1"/>
+            </xpath>
+
+            <!-- CIF Activity Button Condition -->
+            <xpath expr="//page[@name='booking_form_info']//field[@name='sale_order_purchaser_ids']//form//group//button[@name='action_open_activity_wizard']" position="attributes">
+                <attribute name="invisible">not cif_form_id</attribute>
+            </xpath>
+
+            <!-- CIF Request Group - After the group containing payment_term_id -->
+            <xpath expr="//field[@name='payment_term_id']/ancestor::group[1]" position="after">
+                <group string="CIF Request" name="cif_request_group" invisible="not cif_request_session_ids">
+                    <field name="cif_mail_sent_to" readonly="1" invisible="1"/>
+                    <field name="cif_mail_sent_cc" readonly="1" invisible="1"/>
+                    <field name="cif_allowed_submissions"/>
+                    <field name="cif_submitted_count"/>
+                </group>
+            </xpath>
+
+        </field>
+    </record>
+</odoo>
+
