@@ -15,7 +15,7 @@
                                             <h3 style="font-weight: bolder;">Client Information Form</h3>
                                         </td>
                                         <td class="px-2" style="width: 30%; text-align: end;">
-                                            <img src="/seventh_key_custom/static/src/img/7th-key.png"
+                                            <img src="/bs_cif_process/static/src/img/7th-key.png"
                                                  alt="Seventh Key Gateway Logo"
                                                  style="width: 140px; height: 140px; float: inline-end;"/>
                                         </td>
@@ -138,16 +138,12 @@
                                     </tr>
                                 </t>
                                 <tr>
-                                    <td><strong>Payment Plan:</strong></td>
-                                    <td><span t-field="doc.payment_plan.name"/></td>
-                                </tr>
-                                <tr>
                                     <td><strong>Mode of Payment:</strong></td>
                                     <td><span t-field="doc.payment_method_line_id.name"/></td>
                                 </tr>
                                 <tr>
-                                    <td><strong>UAE Residency:</strong></td>
-                                    <td><span t-field="doc.uae_residency_status" t-options='{"widget": "selection"}'/></td>
+                                    <td><strong>Residency Status:</strong></td>
+                                    <td><span t-field="doc.residency_status" t-options='{"widget": "selection"}'/></td>
                                 </tr>
                             </table>
 

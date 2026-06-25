@@ -85,52 +85,12 @@ class CIFController(http.Controller):
         return Partner.create(partner_vals)
 
     def _get_allowed_cif_submissions(self, sale_order):
-        """Return allowed CIF submissions count for token validation.
-
-        Contract (must match sale.order._get_allowed_cif_submissions):
-        - Base is `purchasers_count` when set and > 0, otherwise 1.
-        - When purchaser slots exist, allowed is clamped to the number of slots.
-        - Always at least 1.
-        """
+        """Return allowed CIF submissions count for token validation."""
         configured = int(getattr(sale_order, 'purchasers_count', 0) or 0)
-        allowed = configured if configured > 0 else 1
-
-        # IMPORTANT: if purchaser slots exist, do not allow more submissions than slots.
-        if sale_order.sale_order_purchaser_ids:
-            allowed = min(allowed, len(sale_order.sale_order_purchaser_ids))
-
-        return max(1, int(allowed))
+        return max(1, int(configured))
 
     def _get_cif_submissions_done(self, sale_order):
-        if not sale_order.sale_order_purchaser_ids:
-            return 1 if sale_order.cif_form_id else 0
-        return len(sale_order.sale_order_purchaser_ids.filtered(lambda l: bool(l.cif_form_id)))
-
-    def _get_next_purchaser_slot(self, sale_order):
-        """Return the next purchaser line that is not yet filled by a CIF."""
-        return sale_order.sale_order_purchaser_ids.filtered(lambda l: not l.cif_form_id)[:1] or False
-
-    def _check_partner_not_duplicate_in_purchasers(self, sale_order, partner):
-        """Prevent assigning the same partner to multiple purchaser entries."""
-        if not sale_order.sale_order_purchaser_ids or not partner:
-            return
-        dup = sale_order.sale_order_purchaser_ids.filtered(lambda l: l.partner_id and l.partner_id.id == partner.id)
-        # If the duplicate is already the slot being filled (rare), it'll be rewritten anyway.
-        if dup and any(l.cif_form_id for l in dup):
-            raise ValueError('This partner has already been used for a purchaser on this Sale Order.')
-
-    def _check_email_unique_for_sale_order(self, sale_order, email):
-        """Ensure the submitted email isn't reused for multiple purchasers on same sale order."""
-        email_norm = self._sanitize_email(email)
-        if not email_norm or not sale_order.sale_order_purchaser_ids:
-            return
-        used_emails = set(
-            (l.partner_id.email or '').strip().lower()
-            for l in sale_order.sale_order_purchaser_ids
-            if l.partner_id and l.partner_id.email
-        )
-        if email_norm in used_emails:
-            raise ValueError('This email address has already been used for another purchaser on this Sale Order.')
+        return 1 if sale_order.cif_form_id else 0
 
     def _get_render_values(self, sale_order):
         """Helper to fetch common data needed for rendering any form template."""
@@ -150,7 +110,6 @@ class CIFController(http.Controller):
             'date': fields.Date.today(),
             'titles': request.env['res.partner.title'].sudo().search([]),
             'countries': request.env['res.country'].sudo().search([]),
-            'payment_plans': request.env['installment.option'].sudo().search([]),
             'unit_no': order_line[0].product_id.name if order_line else '',
             # 'payment_methods': request.env['account.payment.method.line'].sudo().search([
             #     ('payment_method_id.payment_type', '=', 'inbound')
@@ -185,8 +144,6 @@ class CIFController(http.Controller):
 
     def _validate_share_percentage_for_sale_order(self, sale_order, submitted_percentage):
         """Validate submitted share against remaining share (upper bound)."""
-        if not sale_order.sale_order_purchaser_ids:
-            return
         if submitted_percentage in (None, False, ''):
             return
         if submitted_percentage < 0:
@@ -194,40 +151,7 @@ class CIFController(http.Controller):
         if submitted_percentage > 100:
             raise ValueError('Shareholder percentage cannot exceed 100%.')
 
-        remaining = self._get_remaining_share_percentage(sale_order)
-        if submitted_percentage > remaining:
-            raise ValueError(
-                f'Shareholder percentage cannot exceed the remaining {remaining}%. You entered {submitted_percentage}%.'
-            )
 
-    def _ensure_purchaser_line(self, sale_order, partner, cif_record, share_percentage=None):
-        """Create or assign a purchaser line and tag it with partner + CIF.
-
-        - If purchaser slots exist: fill next empty slot.
-        - If no slots exist: create a new purchaser line.
-        """
-        if sale_order.sale_order_purchaser_ids:
-            purchaser_line = self._get_next_purchaser_slot(sale_order)
-            if not purchaser_line:
-                return None
-            vals = {
-                'partner_id': partner.id,
-                'cif_form_id': cif_record.id,
-            }
-            # If share is provided, store it on the purchaser slot.
-            if share_percentage not in (None, False, ''):
-                vals['share_percentage'] = share_percentage
-
-            purchaser_line.sudo().write(vals)
-            return purchaser_line
-
-        # No purchaser slots exist yet -> create a line.
-        return request.env['sale.order.purchaser'].sudo().create({
-            'sale_order_id': sale_order.id,
-            'partner_id': partner.id,
-            'cif_form_id': cif_record.id,
-            'share_percentage': share_percentage if share_percentage not in (None, False, '') else 0.0,
-        })
 
     def _get_cif_request_session_for_token(self, token):
         """Resolve a CIF request-session record (`cif.request.session`) for a given public token.
@@ -332,7 +256,7 @@ class CIFController(http.Controller):
             with request.env.cr.savepoint():
                 # Process file uploads for supporting documents
                 passport_doc_ids = []
-                emirates_doc_ids = []
+                id_doc_ids = []
 
                 # Handle passport supporting documents
                 passport_files = request.httprequest.files.getlist('passport_docs')
@@ -349,18 +273,18 @@ class CIFController(http.Controller):
                             passport_doc_ids.append(attachment.id)
 
                 # Handle emirates ID supporting documents
-                emirates_files = request.httprequest.files.getlist('emirates_id_docs')
-                for emirates_file in emirates_files:
-                    if emirates_file and getattr(emirates_file, 'filename', None):
-                        content = emirates_file.read()
+                id_files = request.httprequest.files.getlist('id_docs')
+                for id_file in id_files:
+                    if id_file and getattr(id_file, 'filename', None):
+                        content = id_file.read()
                         if content:
                             attachment = request.env['ir.attachment'].sudo().create({
-                                'name': emirates_file.filename,
+                                'name': id_file.filename,
                                 'type': 'binary',
                                 'datas': base64.b64encode(content),
-                                'mimetype': emirates_file.content_type or 'application/octet-stream',
+                                'mimetype': id_file.content_type or 'application/octet-stream',
                             })
-                            emirates_doc_ids.append(attachment.id)
+                            id_doc_ids.append(attachment.id)
 
                 # Prepare contact data from the form
                 partner_vals = {
@@ -377,15 +301,15 @@ class CIFController(http.Controller):
                     'city': post.get('city'), 'zip': post.get('postal_code'),
                     'passport_no': post.get('passport_no'),
                     'passport_supporting_docs': [(6, 0, passport_doc_ids)] if passport_doc_ids else [],
-                    'emirates_no': post.get('emirates_no'),  # Add Emirates ID
-                    'emirates_id_supporting_docs': [(6, 0, emirates_doc_ids)] if emirates_doc_ids else [],
+                    'national_id': post.get('national_id'),
+                    'id_supporting_docs': [(6, 0, id_doc_ids)] if id_doc_ids else [],
                     'date_of_birth': post.get('date_of_birth') or False,
                     'gender': post.get('gender'),
                     'nationality': int(post.get('nationality_id')) if post.get('nationality_id') else False,
                     'country_id': int(post.get('country_id')) if post.get('country_id') else False,
                     'payment_type': post.get('payment_type') or False,
                     'source_of_income': post.get('source_of_income'),
-                    'uae_residency_status': post.get('uae_residency_status'),
+                    'residency_status': post.get('residency_status'),
                 }
 
                 # Handle signature: file or base64 hidden input
@@ -421,15 +345,7 @@ class CIFController(http.Controller):
                 submitted_percentage = self._parse_percentage(post.get('shareholder_percentage'))
                 self._validate_share_percentage_for_sale_order(sale_order, submitted_percentage)
 
-                # For multi-purchaser flow, enforce email uniqueness across submissions for this SO.
-                if sale_order.sale_order_purchaser_ids:
-                    self._check_email_unique_for_sale_order(sale_order, post.get('email'))
-
                 partner = self._find_or_create_partner(partner_vals, post.get('email'))
-
-                # Prevent duplicate partner assignment across purchaser entries
-                if sale_order.sale_order_purchaser_ids:
-                    self._check_partner_not_duplicate_in_purchasers(sale_order, partner)
 
                 # Create security question answers for partner
                 security_answers = []
@@ -456,7 +372,7 @@ class CIFController(http.Controller):
                     'created_partner_id': partner.id, 'signature': signature_b64,
                     'agent_id': sale_order.agent_id.id if sale_order.agent_id else False,
                     'passport_supporting_docs': [(6, 0, passport_doc_ids)] if passport_doc_ids else [],
-                    'emirates_id_supporting_docs': [(6, 0, emirates_doc_ids)] if emirates_doc_ids else [],
+                    'id_supporting_docs': [(6, 0, id_doc_ids)] if id_doc_ids else [],
                     'cif_request_session_id': cif_request_session.id if cif_request_session else False,
                     # Add verification status from session
                     'is_mobile_verified': request.session.get(f'verified_mobile_{cif_request_key}', False),
@@ -469,20 +385,7 @@ class CIFController(http.Controller):
                 
                 cif_record = request.env['cif.form'].sudo().create(cif_vals)
 
-                # Create sale.order.purchaser record for UI display
-                # This allows users to see purchaser details in "Additional Purchaser Details" tab
-                purchaser_vals = {
-                    'sale_order_id': sale_order.id,
-                    'partner_id': partner.id,
-                    'cif_form_id': cif_record.id,
-                }
-                if submitted_percentage not in (None, False, ''):
-                    purchaser_vals['share_percentage'] = submitted_percentage
-
-                request.env['sale.order.purchaser'].sudo().create(purchaser_vals)
-
                 chatter_message = f"Client Information Form {cif_record.cif_no} submitted for: {partner.name}."
-                # self._post_process_submission(sale_order, cif_record, chatter_message)
                 sale_order.sudo().message_post(
                     body=chatter_message,
                 )
@@ -581,7 +484,7 @@ class CIFController(http.Controller):
             with request.env.cr.savepoint():
                 # Process file uploads for supporting documents
                 passport_doc_ids = []
-                emirates_doc_ids = []
+                id_doc_ids = []
 
                 # Handle passport supporting documents
                 passport_files = request.httprequest.files.getlist('passport_docs')
@@ -598,18 +501,18 @@ class CIFController(http.Controller):
                             passport_doc_ids.append(attachment.id)
 
                 # Handle emirates ID supporting documents
-                emirates_files = request.httprequest.files.getlist('emirates_id_docs')
-                for emirates_file in emirates_files:
-                    if emirates_file and getattr(emirates_file, 'filename', None):
-                        content = emirates_file.read()
+                id_files = request.httprequest.files.getlist('id_docs')
+                for id_file in id_files:
+                    if id_file and getattr(id_file, 'filename', None):
+                        content = id_file.read()
                         if content:
                             attachment = request.env['ir.attachment'].sudo().create({
-                                'name': emirates_file.filename,
+                                'name': id_file.filename,
                                 'type': 'binary',
                                 'datas': base64.b64encode(content),
-                                'mimetype': emirates_file.content_type or 'application/octet-stream',
+                                'mimetype': id_file.content_type or 'application/octet-stream',
                             })
-                            emirates_doc_ids.append(attachment.id)
+                            id_doc_ids.append(attachment.id)
 
                 company_vals = {
                     'name': post.get('company_name'),
@@ -624,8 +527,8 @@ class CIFController(http.Controller):
                     'title': post.get('shareholder_title',''),
                     'passport_no': post.get('passport_no'),
                     'passport_supporting_docs': [(6, 0, passport_doc_ids)] if passport_doc_ids else [],
-                    'emirates_no': post.get('emirates_no'),  # Add Emirates ID
-                    'emirates_id_supporting_docs': [(6, 0, emirates_doc_ids)] if emirates_doc_ids else [],
+                    'national_id': post.get('national_id'),
+                    'id_supporting_docs': [(6, 0, id_doc_ids)] if id_doc_ids else [],
                     'email': post.get('email'),
                     'email_address': post.get('email_address') or post.get('alternate_email'),
                     'mobile': post.get('mobile'),
@@ -633,7 +536,7 @@ class CIFController(http.Controller):
                     'date_of_birth': post.get('date_of_birth') or False,
                     'nationality': int(post.get('nationality_id')) if post.get('nationality_id') else False,
                     'payment_type': post.get('payment_type') or False,
-                    'uae_residency_status': post.get('uae_residency_status'),
+                    'residency_status': post.get('residency_status'),
                 }
                 signature_b64 = None
                 signature_file = request.httprequest.files.get('signature') or \
@@ -664,15 +567,7 @@ class CIFController(http.Controller):
 
                 company_vals['signature'] = signature_b64
 
-                # (submitted_percentage already computed/validated above)
-
-                if sale_order.sale_order_purchaser_ids:
-                    self._check_email_unique_for_sale_order(sale_order, post.get('email'))
-
                 company_partner = self._find_or_create_partner(company_vals, post.get('email'))
-
-                if sale_order.sale_order_purchaser_ids:
-                    self._check_partner_not_duplicate_in_purchasers(sale_order, company_partner)
 
                 # Create security question answers for company partner
                 security_answers = []
@@ -702,7 +597,7 @@ class CIFController(http.Controller):
                     'signature': signature_b64,
                     'agent_id': sale_order.agent_id.id if sale_order.agent_id else False,
                     'passport_supporting_docs': [(6, 0, passport_doc_ids)] if passport_doc_ids else [],
-                    'emirates_id_supporting_docs': [(6, 0, emirates_doc_ids)] if emirates_doc_ids else [],
+                    'id_supporting_docs': [(6, 0, id_doc_ids)] if id_doc_ids else [],
                     'cif_request_session_id': cif_request_session.id if cif_request_session else False,
                     # Add verification status from session
                     'is_mobile_verified': request.session.get(f'verified_mobile_{cif_request_key}', False),
@@ -715,20 +610,7 @@ class CIFController(http.Controller):
                 
                 cif_record = request.env['cif.form'].sudo().create(cif_vals)
 
-                # Create sale.order.purchaser record for UI display
-                # This allows users to see purchaser details in "Additional Purchaser Details" tab
-                purchaser_vals = {
-                    'sale_order_id': sale_order.id,
-                    'partner_id': company_partner.id,
-                    'cif_form_id': cif_record.id,
-                }
-                if submitted_percentage not in (None, False, ''):
-                    purchaser_vals['share_percentage'] = submitted_percentage
-
-                request.env['sale.order.purchaser'].sudo().create(purchaser_vals)
-
                 chatter_message = f"Company Information Form {cif_record.cif_no} submitted for: {company_partner.name} (Authorized Signatory: {company_partner.name})."
-                # self._post_process_submission(sale_order, cif_record, chatter_message) # signature is not visible. Let's fix it later.
                 sale_order.sudo().message_post(
                     body=chatter_message,
                 )
@@ -837,8 +719,11 @@ class CIFController(http.Controller):
                 'sale_order_name': change_req.sale_order_id.name if change_req.sale_order_id else '',
             })
 
-        purchaser_line = change_req.purchaser_line_id
-        if not purchaser_line or not purchaser_line.cif_form_id or not purchaser_line.partner_id:
+        cif = change_req.cif_form_id
+        partner = change_req.partner_id or (cif.created_partner_id if cif else False)
+        sale_order = change_req.sale_order_id
+
+        if not cif or not partner or not sale_order:
             return request.render('bs_cif_process.cif_form_already_submitted_template')
 
         # Default behavior: always start from Step 1 (email verification) when opening the public link
@@ -859,10 +744,6 @@ class CIFController(http.Controller):
             return self._render_change_email_step(change_req, step_token=email_step_token)
 
         change_req.mark_opened(ip=request.httprequest.remote_addr, ua=request.httprequest.user_agent.string)
-
-        sale_order = purchaser_line.sale_order_id
-        cif = purchaser_line.cif_form_id
-        partner = purchaser_line.partner_id
 
         render_values = self._get_render_values(sale_order)
         # Gather existing security answers from the CIF record (sequence -> {question_id, answer})
@@ -889,8 +770,6 @@ class CIFController(http.Controller):
             'existing_cif': cif,
             'existing_partner': partner,
             'readonly_email': True,
-            'readonly_share_percentage': True,
-            'prefill_share_percentage': purchaser_line.share_percentage,
         })
 
         # Render correct template based on client_type
@@ -1021,16 +900,9 @@ class CIFController(http.Controller):
             security_step_token = change_req.issue_step_token('security', ttl_minutes=15)
             return self._render_change_security_step(change_req, error_message=str(e), step_token=security_step_token)
 
-        purchaser_line = change_req.purchaser_line_id
-        sale_order = purchaser_line.sale_order_id
-        cif = purchaser_line.cif_form_id
-
-        # Always update the partner tagged with the CIF (single source of truth for CIF owner)
-        partner = cif.created_partner_id or purchaser_line.partner_id
-
-        # If purchaser line got out of sync, align it back to the CIF-tagged partner.
-        if partner and purchaser_line.partner_id and purchaser_line.partner_id.id != partner.id:
-            purchaser_line.sudo().write({'partner_id': partner.id})
+        sale_order = change_req.sale_order_id
+        cif = change_req.cif_form_id
+        partner = change_req.partner_id or (cif.created_partner_id if cif else False)
 
         if not (sale_order and cif and partner):
             return request.render('bs_cif_process.cif_form_already_submitted_template')
@@ -1041,13 +913,12 @@ class CIFController(http.Controller):
             immutable_email = (change_req.new_email or '').strip().lower()
         else:
             immutable_email = (partner.email or '').strip().lower()
-        immutable_share = purchaser_line.share_percentage
 
         try:
             with request.env.cr.savepoint():
                 # Handle uploads similarly to main flow; here we only update if provided.
                 passport_doc_ids = []
-                emirates_doc_ids = []
+                id_doc_ids = []
 
                 passport_files = request.httprequest.files.getlist('passport_docs')
                 for passport_file in passport_files:
@@ -1062,18 +933,18 @@ class CIFController(http.Controller):
                             })
                             passport_doc_ids.append(attachment.id)
 
-                emirates_files = request.httprequest.files.getlist('emirates_id_docs')
-                for emirates_file in emirates_files:
-                    if emirates_file and getattr(emirates_file, 'filename', None):
-                        content = emirates_file.read()
+                id_files = request.httprequest.files.getlist('id_docs')
+                for id_file in id_files:
+                    if id_file and getattr(id_file, 'filename', None):
+                        content = id_file.read()
                         if content:
                             attachment = request.env['ir.attachment'].sudo().create({
-                                'name': emirates_file.filename,
+                                'name': id_file.filename,
                                 'type': 'binary',
                                 'datas': base64.b64encode(content),
-                                'mimetype': emirates_file.content_type or 'application/octet-stream',
+                                'mimetype': id_file.content_type or 'application/octet-stream',
                             })
-                            emirates_doc_ids.append(attachment.id)
+                            id_doc_ids.append(attachment.id)
 
                 # Optional signature update: only overwrite if provided.
                 signature_b64 = None
@@ -1106,7 +977,7 @@ class CIFController(http.Controller):
                     'city': post.get('city') or partner.city,
                     'zip': post.get('postal_code') or partner.zip,
                     'passport_no': post.get('passport_no') or getattr(partner, 'passport_no', False),
-                    'emirates_no': post.get('emirates_no') or getattr(partner, 'emirates_no', False),
+                    'national_id': post.get('national_id') or getattr(partner, 'national_id', False),
                     'middle_name': post.get('middle_name') or getattr(partner, 'middle_name', False),
                     'date_of_birth': post.get('date_of_birth') or getattr(partner, 'date_of_birth', False),
                     'gender': post.get('gender') or getattr(partner, 'gender', False),
@@ -1114,7 +985,7 @@ class CIFController(http.Controller):
                     'nationality': int(post.get('nationality_id')) if post.get('nationality_id') else getattr(partner, 'nationality', False) and partner.nationality.id,
                     'country_id': int(post.get('country_id')) if post.get('country_id') else partner.country_id.id,
                     'payment_type': post.get('payment_type') or getattr(partner, 'payment_type', False),
-                    'uae_residency_status': post.get('uae_residency_status') or getattr(partner, 'uae_residency_status', False),
+                    'residency_status': post.get('residency_status') or getattr(partner, 'residency_status', False),
                     'source_of_income': post.get('source_of_income') or getattr(partner, 'source_of_income', False),
                 }
 
@@ -1132,19 +1003,19 @@ class CIFController(http.Controller):
                     partner_vals['signature'] = signature_b64
                 if passport_doc_ids:
                     partner_vals['passport_supporting_docs'] = [(6, 0, passport_doc_ids)]
-                if emirates_doc_ids:
-                    partner_vals['emirates_id_supporting_docs'] = [(6, 0, emirates_doc_ids)]
+                if id_doc_ids:
+                    partner_vals['id_supporting_docs'] = [(6, 0, id_doc_ids)]
 
                 partner.sudo().write(partner_vals)
 
-                # CIF updates with same payload (keep share/email immutable)
+                # CIF updates with same payload (keep email immutable)
                 # Sync all relevant fields between partner and CIF for data consistency
                 cif_vals = {
                     'source_sale_order_id': sale_order.id,
                     'created_partner_id': partner.id,
                     # Immutable fields
                     'email': immutable_email or cif.email,
-                    'shareholder_percentage': immutable_share,
+                    'shareholder_percentage': cif.shareholder_percentage,
                     # Contact Information
                     'mobile': post.get('mobile') or cif.mobile,
                     'phone': post.get('phone') or cif.phone,
@@ -1157,7 +1028,7 @@ class CIFController(http.Controller):
                     'company_name': post.get('company_name') or cif.company_name,
                     # Identity Documents
                     'passport_no': post.get('passport_no') or cif.passport_no,
-                    'emirates_no': post.get('emirates_no') or cif.emirates_no,
+                    'national_id': post.get('national_id') or cif.national_id,
                     'nationality_id': int(post.get('nationality_id')) if post.get('nationality_id') else cif.nationality_id.id if cif.nationality_id else False,
                     # Address Information
                     'unit_villa_no': post.get('unit_villa_no') or cif.unit_villa_no,
@@ -1189,8 +1060,8 @@ class CIFController(http.Controller):
                     cif_vals['signature'] = signature_b64
                 if passport_doc_ids:
                     cif_vals['passport_supporting_docs'] = [(6, 0, passport_doc_ids)]
-                if emirates_doc_ids:
-                    cif_vals['emirates_id_supporting_docs'] = [(6, 0, emirates_doc_ids)]
+                if id_doc_ids:
+                    cif_vals['id_supporting_docs'] = [(6, 0, id_doc_ids)]
 
                 cif.sudo().write(cif_vals)
 

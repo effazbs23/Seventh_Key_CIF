@@ -4,8 +4,8 @@
     function initResidencyStatusToggle() {
         const residentRadio = document.getElementById('resident_radio');
         const nonResidentRadio = document.getElementById('non_resident_radio');
-        const emiratesIdInput = document.getElementById('emirates_id');
-        const emiratesIdDocs = document.getElementById('emirates_id_docs');
+        const nationalIdInput = document.getElementById('national_id');
+        const idDocs = document.getElementById('id_docs');
         const residentAsterisks = document.querySelectorAll('.resident-required');
         
         if (!residentRadio || !nonResidentRadio) {
@@ -14,22 +14,22 @@
 
         function updateFields() {
             if (residentRadio.checked) {
-                // Resident: make EID required, show asterisks
-                if (emiratesIdInput) {
-                    emiratesIdInput.setAttribute('required', 'required');
+                // Resident: make national ID required, show asterisks
+                if (nationalIdInput) {
+                    nationalIdInput.setAttribute('required', 'required');
                 }
                 // Don't set required attribute on file input (handled by custom validation)
                 residentAsterisks.forEach(asterisk => {
                     asterisk.style.display = 'inline';
                 });
             } else if (nonResidentRadio.checked) {
-                // Non-resident: make EID optional, hide asterisks, clear EID docs
-                if (emiratesIdInput) {
-                    emiratesIdInput.removeAttribute('required');
-                    emiratesIdInput.value = '';
+                // Non-resident: make national ID optional, hide asterisks, clear ID docs
+                if (nationalIdInput) {
+                    nationalIdInput.removeAttribute('required');
+                    nationalIdInput.value = '';
                 }
-                if (emiratesIdDocs) {
-                    emiratesIdDocs.value = '';
+                if (idDocs) {
+                    idDocs.value = '';
                 }
                 residentAsterisks.forEach(asterisk => {
                     asterisk.style.display = 'none';
@@ -79,14 +79,14 @@
 
             const residentRadio = document.getElementById('resident_radio');
             const passportDocs = document.getElementById('passport_docs');
-            const emiratesIdDocs = document.getElementById('emirates_id_docs');
+            const idDocs = document.getElementById('id_docs');
 
-            // Emirates ID docs (required only for residents in new CIF mode)
-            if (residentRadio && residentRadio.checked && emiratesIdDocs && (!emiratesIdDocs.files || emiratesIdDocs.files.length === 0)) {
+            // ID docs (required only for residents in new CIF mode)
+            if (residentRadio && residentRadio.checked && idDocs && (!idDocs.files || idDocs.files.length === 0)) {
                 ev.preventDefault();
                 ev.stopPropagation();
-                alert('Emirates ID Supporting Document is required for residents. Please upload at least one file.');
-                focusUploadButtonFor(emiratesIdDocs);
+                alert('ID Supporting Document is required for residents. Please upload at least one file.');
+                focusUploadButtonFor(idDocs);
                 return;
             }
             

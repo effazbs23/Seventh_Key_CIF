@@ -11,15 +11,15 @@
         - Security question-based verification
         - CIF change request workflow with multi-step verification
         - CIF request session management with token-based access
-        - Document upload support (Passport, Emirates ID)
+        - Document upload support (Passport, National ID)
         - Integration with Sale Orders and Partners
-
-        Migrated from seventh_key_custom module for better modularity.
     """,
     'category': 'Sales',
     'version': '18.0.1.0.0',
     'depends': [
-        'seventh_key_custom',
+        'mail',
+        'sale',
+        'website',
     ],
     'data': [
         # Security
@@ -41,12 +41,12 @@
         'views/cif_form_views.xml',
         'views/cif_change_request_views.xml',
         'views/cif_request_session_views.xml',
+        'views/security_question_views.xml',
         'views/security_question_answer_views.xml',
         'wizards/cif_form_reject_reason_wizard_views.xml',
         # 'views/phone_otp_views.xml',
         'views/email_otp_views.xml',
         'views/sale_order_views.xml',
-        'views/sale_order_purchaser_views.xml',
         'views/res_partner_cif_views.xml',
 
         # Views - Frontend/Website Templates

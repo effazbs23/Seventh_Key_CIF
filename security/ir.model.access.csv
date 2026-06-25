@@ -4,3 +4,5 @@ access_cif_form_reject_reason_wizard_user,cif.form.reject.reason.wizard.user,mod
 access_cif_change_request_user,cif.change.request.user,model_cif_change_request,base.group_user,1,1,1,1
 access_cif_request_session_user,cif.request.session.user,model_cif_request_session,base.group_user,1,1,1,1
 access_email_otp_user,email.otp.user,model_email_otp,base.group_user,1,1,1,1
+access_security_question_user,security.question.user,model_security_question,base.group_user,1,1,1,1
+access_security_question_answer_user,security.question.answer.user,model_security_question_answer,base.group_user,1,1,1,1

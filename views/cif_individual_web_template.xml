@@ -13,7 +13,7 @@
                             <div class="col-lg-10 mx-auto">
                                 <div class="d-flex justify-content-between align-items-center mb-4">
                                     <!-- Increased logo height from 70px to 110px for consistency -->
-                                    <img src="/seventh_key_custom/static/src/img/7th-key.png" alt="Logo"
+                                    <img src="/bs_cif_process/static/src/img/7th-key.png" alt="Logo"
                                          style="height:110px; width:auto;"/>
                                 </div>
 
@@ -68,15 +68,15 @@
                                             </div>
                                         </div>
 
-                                         <!-- UAE Residency Status - Hidden in change mode -->
+                                         <!-- Residency Status - Hidden in change mode -->
                                          <t t-if="not is_change_mode">
-                                         <div class="form-group s_website_form_field s_website_form_required" data-name="UAE Residency Status">
+                                         <div class="form-group s_website_form_field s_website_form_required" data-name="Residency Status">
                                             <label class="col-form-label s_website_form_label">
-                                                UAE Residency Status<span class="s_website_form_mark"> *</span>
+                                                Residency Status<span class="s_website_form_mark"> *</span>
                                             </label>
                                             <div class="s_website_form_multiple">
                                                 <div class="form-check form-check-inline">
-                                                    <input type="radio" id="resident_radio" name="uae_residency_status"
+                                                    <input type="radio" id="resident_radio" name="residency_status"
                                                            class="form-check-input" value="resident" required="required"
                                                            checked="checked"/>
                                                     <label class="form-check-label" for="resident_radio">Resident
@@ -84,7 +84,7 @@
                                                 </div>
                                                 <div class="form-check form-check-inline">
                                                     <input type="radio" id="non_resident_radio"
-                                                           name="uae_residency_status" class="form-check-input"
+                                                           name="residency_status" class="form-check-input"
                                                            value="non_resident" required="required"/>
                                                     <label class="form-check-label" for="non_resident_radio">Non
                                                         Resident
@@ -94,7 +94,7 @@
                                         </div>
                                         </t>
 
-                                        <!-- Dynamic fields based on UAE Residency Status -->
+                                        <!-- Dynamic fields based on Residency Status -->
                                         <div class="row" id="residency_fields">
                                             <div class="form-group col-lg-6 residency_field" id="passport_field">
                                                 <label class="col-form-label s_website_form_label" for="passport_no">
@@ -103,13 +103,13 @@
                                                 <input type="text" class="form-control" name="passport_no" id="passport_no" required="required"
                                                        t-att-value="existing_partner.passport_no if is_change_mode and existing_partner else ''"/>
                                             </div>
-                                            <!-- Emirates ID Row -->
-                                            <div class="form-group col-lg-6 residency_field" id="emirates_id_field">
-                                                <label class="col-form-label s_website_form_label" for="emirates_id">
-                                                    Emirates ID No. <span class="s_website_form_mark resident-required"> *</span>
+                                            <!-- National ID Row -->
+                                            <div class="form-group col-lg-6 residency_field" id="national_id_field">
+                                                <label class="col-form-label s_website_form_label" for="national_id">
+                                                    National ID No. <span class="s_website_form_mark resident-required"> *</span>
                                                 </label>
-                                                <input type="text" class="form-control" name="emirates_no" id="emirates_id"
-                                                       t-att-value="existing_partner.emirates_no if is_change_mode and existing_partner else ''"/>
+                                                <input type="text" class="form-control" name="national_id" id="national_id"
+                                                       t-att-value="existing_partner.national_id if is_change_mode and existing_partner else ''"/>
                                             </div>
                                         </div>
 
@@ -443,20 +443,6 @@
                                                        readonly="readonly"
                                                        t-att-value="unit_no"/>
                                             </div>
-                                            <div class="form-group col-lg-6 s_website_form_field s_website_form_required" data-name="Payment Plan">
-                                                <label class="col-form-label s_website_form_label" for="payment_plan">
-                                                    Payment Plan
-                                                </label>
-                                                <select name="payment_plan" class="form-control" disabled="disabled">
-                                                    <option value="">Select a payment plan...</option>
-                                                    <t t-foreach="payment_plans" t-as="plan">
-                                                        <option
-                                                                t-att-selected="sale_order.installment_option_custom and sale_order.installment_option_custom.id == plan.id">
-                                                            <t t-esc="plan.name"/>
-                                                        </option>
-                                                    </t>
-                                                </select>
-                                            </div>
                                         </div>
 
                                         <div class="row">
@@ -467,7 +453,7 @@
                                                 </label>
                                                 <input type="number" step="0.01" min="0" max="100" class="form-control"
                                                        name="shareholder_percentage" id="shareholder_percentage" required="required"
-                                                       t-att-value="prefill_share_percentage if is_change_mode else max_share_percentage"
+                                                       t-att-value="existing_cif.shareholder_percentage if is_change_mode else max_share_percentage"
                                                        t-att-readonly="'readonly' if is_change_mode else None"
                                                        t-att-data-required-percentage="max_share_percentage"
                                                        placeholder="Enter shareholder percentage"/>
@@ -540,16 +526,16 @@
                                                     </div>
                                                 </div>
                                             </div>
-                                            <div class="form-group col-lg-12 residency_field mt-4" id="emirates_id_doc_field">
-                                                <label class="col-form-label s_website_form_label" for="emirates_id_docs">
-                                                   <b>Emirates ID Supporting Document</b><t t-if="not is_change_mode"><span class="s_website_form_mark resident-required"> *</span></t>
+                                            <div class="form-group col-lg-12 residency_field mt-4" id="id_doc_field">
+                                                <label class="col-form-label s_website_form_label" for="id_docs">
+                                                   <b>ID Supporting Document</b><t t-if="not is_change_mode"><span class="s_website_form_mark resident-required"> *</span></t>
                                                    <t t-if="is_change_mode"> <small class="text-muted">(Optional - upload only if changed)</small></t>
                                                 </label>
 
                                                 <div class="o_field_widget o_field_many2many_binary">
                                                     <div class="oe_fileupload">
                                                         <!-- File preview area -->
-                                                        <div class="o_attachments" id="emirates_id_docs_preview">
+                                                        <div class="o_attachments" id="id_docs_preview">
                                                             <small class="text-muted">No files selected</small>
                                                         </div>
 
@@ -557,17 +543,17 @@
                                                         <div class="oe_add mt-2">
                                                             <span class="o_file_input">
                                                                 <span class="o_file_input_trigger">
-                                                                    <button type="button" class="btn btn-secondary o_attach" onclick="document.getElementById('emirates_id_docs').click();">
-                                                                        <i class="fa fa-paperclip"> </i> Add Emirates ID Supporting Documents
+                                                                    <button type="button" class="btn btn-secondary o_attach" onclick="document.getElementById('id_docs').click();">
+                                                                        <i class="fa fa-paperclip"> </i> Add ID Supporting Documents
                                                                     </button>
                                                                 </span>
                                                                 <input type="file"
-                                                                    name="emirates_id_docs"
-                                                                    id="emirates_id_docs"
+                                                                    name="id_docs"
+                                                                    id="id_docs"
                                                                     class="o_input_file d-none"
                                                                     multiple="multiple"
                                                                     accept=".pdf,image/*,.doc,.docx"
-                                                                    onchange="previewMultipleFiles(this, 'emirates_id_docs_preview')"/>
+                                                                    onchange="previewMultipleFiles(this, 'id_docs_preview')"/>
                                                             </span>
                                                         </div>
                                                     </div>

@@ -35,9 +35,8 @@ class CIFChangeRequest(models.Model):
         tracking=True,
     )
 
-    purchaser_line_id = fields.Many2one('sale.order.purchaser', string='Purchaser Line', required=True, ondelete='cascade', tracking=True)
-    sale_order_id = fields.Many2one(related='purchaser_line_id.sale_order_id', string='Sale Order', store=True, readonly=True)
-    partner_id = fields.Many2one(related='purchaser_line_id.partner_id', string='Partner', store=True, readonly=True)
+    sale_order_id = fields.Many2one('sale.order', string='Sale Order', required=True, ondelete='cascade', tracking=True)
+    partner_id = fields.Many2one('res.partner', string='Partner', tracking=True)
 
     # Explicit tag to the CIF form to keep a stable history on the CIF itself.
     cif_form_id = fields.Many2one('cif.form', string='CIF Form', required=True, ondelete='cascade', tracking=True)
@@ -143,7 +142,7 @@ class CIFChangeRequest(models.Model):
     def _get_registered_email(self):
         """Email address that must be verified for this request.
 
-        Prefer CIF-tagged partner email, fallback to purchaser line partner, then email_to.
+        Prefer CIF-tagged partner email, fallback to partner, then email_to.
         """
         self.ensure_one()
         partner = (self.cif_form_id.created_partner_id if self.cif_form_id else False) or self.partner_id
@@ -407,7 +406,6 @@ class CIFChangeRequest(models.Model):
         """
         Open mail compose wizard to send CIF change request email.
         ✅ Posts to chatter when email is sent (using composition_mode='comment').
-        Similar pattern to EOI signature request.
         """
         self.ensure_one()
 
@@ -421,23 +419,22 @@ class CIFChangeRequest(models.Model):
         base_url = self.env['ir.config_parameter'].sudo().get_param('web.base.url') or ''
         change_url = f"{base_url}/client-information-form/change?token={self.token}"
 
-        # Get partner from purchaser line
-        partner = self.purchaser_line_id.partner_id if self.purchaser_line_id else False
+        # Get partner
+        partner = self.partner_id
 
         # Prepare context for compose wizard
         ctx = {
-            'default_model': 'cif.change.request',  # ✅ Model for chatter logging
-            'default_res_ids': self.ids,  # ✅ Record ID for chatter
+            'default_model': 'cif.change.request',
+            'default_res_ids': self.ids,
             'default_use_template': True,
             'default_template_id': template.id,
-            'default_composition_mode': 'comment',  # ✅ This ensures chatter logging
+            'default_composition_mode': 'comment',
             'default_partner_ids': [(6, 0, [partner.id])] if partner else [],
-            'change_url': change_url,  # For template rendering
+            'change_url': change_url,
             'force_email': True,
-            'mail_explicit_recipients_only': True,  # Prevent follower notifications - only send to explicit partner_ids
+            'mail_explicit_recipients_only': True,
         }
 
-        # Return action to open compose wizard
         return {
             'type': 'ir.actions.act_window',
             'name': _('Send CIF Change Request'),
@@ -448,7 +445,7 @@ class CIFChangeRequest(models.Model):
         }
 
     @api.model
-    def _build_cif_change_composer_action(self, purchaser_line, sale_order, partner, email_to):
+    def _build_cif_change_composer_action(self, sale_order, partner, email_to, cif_form):
         """
         Single source of truth for opening the CIF Change Request email composer.
 
@@ -456,13 +453,8 @@ class CIFChangeRequest(models.Model):
         returns the ``ir.actions.act_window`` dict that opens ``mail.compose.message``
         pre-loaded with the ``email_template_cif_change_request`` template.
 
-        The template is defined in ``data/cif_change_mail_template.xml`` and rendered
-        against the Sale Order record.  The dynamic CIF update link is injected via
-        ``ctx.get('cif_update_link')`` inside the template body.
-
         Called from:
         - ``cif.form.action_send_cif_change_request``        (CIF form button)
-        - ``purchaser.activity.wizard._handle_change_cif``   (Activity Wizard)
 
         No DB record is created here.  The ``on_send_callback`` registered in the
         context ensures that ``post_send_create`` is called **only** when the user
@@ -507,19 +499,19 @@ class CIFChangeRequest(models.Model):
                 'on_send_callback_model': 'cif.change.request',
                 'on_send_callback_method': 'post_send_create',
                 'on_send_callback_kwargs': {
-                    'purchaser_line_id': purchaser_line.id,
-                    'cif_form_id': purchaser_line.cif_form_id.id,
+                    'cif_form_id': cif_form.id,
+                    'partner_id': partner.id if partner else False,
+                    'sale_order_id': sale_order.id,
                     'email_to': email_to,
                     'token': token,
-                    'sale_order_id': sale_order.id,
                     'cif_update_link': cif_update_link,
                 },
             },
         }
 
     @api.model
-    def post_send_create(self, purchaser_line_id, cif_form_id, email_to,
-                         token, sale_order_id, cif_update_link):
+    def post_send_create(self, cif_form_id, partner_id, sale_order_id, email_to,
+                         token, cif_update_link):
         """
         Universal on_send_callback — called by mail.compose.message._action_send_mail
         ONLY when the user clicks **Send**.
@@ -532,8 +524,9 @@ class CIFChangeRequest(models.Model):
         from markupsafe import Markup
 
         change_req = self.create({
-            'purchaser_line_id': purchaser_line_id,
             'cif_form_id': cif_form_id,
+            'partner_id': partner_id,
+            'sale_order_id': sale_order_id,
             'email_to': email_to,
             'token': token,
             'state': 'draft',
@@ -623,7 +616,6 @@ class CIFChangeRequest(models.Model):
             raise ValidationError(_("This change request link has expired."))
         if self.state == 'done' or self.workflow_state in ('done',):
             raise ValidationError(_("This change request is no longer valid."))
-        # Manual expiry: do not auto-expire based on time anymore.
 
     def mark_opened(self, ip=None, ua=None):
         for rec in self:
@@ -654,12 +646,11 @@ class CIFChangeRequest(models.Model):
         because Change CIF updates must apply to that partner.
         """
         for rec in self:
-            line = rec.purchaser_line_id
             cif = rec.cif_form_id
-            partner = (cif.created_partner_id if cif else False) or (line.partner_id if line else False)
+            partner = (cif.created_partner_id if cif else False) or rec.partner_id
             rec.snapshot_partner_name = partner.display_name if partner else False
             rec.snapshot_partner_email = (partner.email or '').strip() if partner else (rec.email_to or '').strip()
-            rec.snapshot_share_percentage = line.share_percentage if line else 0.0
+            rec.snapshot_share_percentage = 0.0
             rec.snapshot_cif_no = cif.cif_no if cif else False
 
     @api.model_create_multi
@@ -669,27 +660,11 @@ class CIFChangeRequest(models.Model):
             if vals.get('name', 'New') == 'New':
                 vals['name'] = self.env['ir.sequence'].next_by_code('cif.change.request.sequence') or 'New'
 
-        # Ensure required cif_form_id is set before create() (cannot be fixed after create because it's required)
-        for vals in vals_list:
-            if not vals.get('cif_form_id') and vals.get('purchaser_line_id'):
-                line = self.env['sale.order.purchaser'].browse(vals['purchaser_line_id'])
-                if line and line.cif_form_id:
-                    vals['cif_form_id'] = line.cif_form_id.id
-
         records = super().create(vals_list)
         for rec in records:
             # Snapshot the existing data at request time
             rec._compute_snapshot_values()
         return records
-
-    def write(self, vals):
-        res = super().write(vals)
-        # Keep cif_form_id aligned with purchaser_line_id when purchaser_line_id is changed and cif_form_id not provided.
-        if 'purchaser_line_id' in vals and 'cif_form_id' not in vals:
-            for rec in self:
-                if rec.purchaser_line_id and rec.purchaser_line_id.cif_form_id:
-                    rec.cif_form_id = rec.purchaser_line_id.cif_form_id.id
-        return res
 
     # =========================================================
     # ==   Change CIF public workflow hardening (step tokens) ==
@@ -749,6 +724,4 @@ class CIFChangeRequest(models.Model):
         }
         if self.workflow_state in ('expired', 'done'):
             raise ValidationError(_("This change request is no longer valid."))
-        # if new_state not in allowed.get(self.workflow_state, set()):
-        #     raise ValidationError(_("Invalid workflow transition."))
         self.workflow_state = new_state

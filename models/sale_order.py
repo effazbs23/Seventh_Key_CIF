@@ -70,7 +70,7 @@ class SaleOrder(models.Model):
         string='Has CIF Form',
         compute='_compute_has_cif_form',
         store=False,
-        help='Check if any purchaser has a CIF form linked'
+        help='Check if this sale order has a CIF form linked'
     )
 
     @api.depends('cif_request_session_ids.allowed_submissions', 'cif_request_session_ids.submitted_count')
@@ -86,7 +86,7 @@ class SaleOrder(models.Model):
 
     def _compute_has_cif_form(self):
         for order in self:
-            order.has_cif_form = any(p.cif_form_id for p in order.sale_order_purchaser_ids) or self.env['cif.form'].search([('source_sale_order_id', '=', order.id)])
+            order.has_cif_form = bool(self.env['cif.form'].search([('source_sale_order_id', '=', order.id)], limit=1))
 
 
     def create_cif_request_session(self, customer_type, allowed_submissions=1):
@@ -176,10 +176,7 @@ class SaleOrder(models.Model):
 
     def action_view_cif_forms(self):
         self.ensure_one()
-        # CIF forms are linked per purchaser slot
-        cif_records = self.sale_order_purchaser_ids.mapped('cif_form_id')
-        if not cif_records:
-            cif_records = self.env['cif.form'].search([('source_sale_order_id', '=', self.id)])
+        cif_records = self.env['cif.form'].search([('source_sale_order_id', '=', self.id)])
 
         if not cif_records:
             raise UserError(_("No CIF Form is linked to this Sale Order yet."))
@@ -266,10 +263,3 @@ class SaleOrder(models.Model):
         return True
 
 
-    def create_invoices_from_lines(self):
-        allowed_states = ('sale', 'in_cif', 'in_eoi', 'booking_sent', 'booking_signed', 'spa_sent', 'spa_signed')
-        for order in self:
-            if order.state not in allowed_states:
-                raise UserError("An invoice can be created after the Sale Order is confirmed.")
-        
-        return super(SaleOrder, self).create_invoices_from_lines()

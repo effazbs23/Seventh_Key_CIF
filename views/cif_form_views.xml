@@ -62,7 +62,6 @@
                 <group>
                     <group>
                         <field name="source_sale_order_id" readonly="1" options="{'no_create': True, 'no_open': False}"/>
-                        <field name="payment_plan" readonly="1"/>
                         <field name="unit_no" readonly="1"/>
                         <field name="created_partner_id" readonly="1" string="Created/Updated Partner"/>
                         <field name="payment_type" readonly="1"/>
@@ -71,7 +70,7 @@
                         <field name="client_type" widget="radio" options="{'horizontal': true}" readonly="1"/>
                         <field name="create_date" readonly="1"/>
                         <field name="passport_supporting_docs" widget="many2many_binary"/>
-                        <field name="emirates_id_supporting_docs" widget="many2many_binary"/>
+                        <field name="id_supporting_docs" widget="many2many_binary"/>
                     </group>
                 </group>
 
@@ -88,7 +87,7 @@
                     <group>
                         <field name="date_of_birth" readonly="1" />
                         <field name="source_of_income" readonly="1" />
-                        <field name="uae_residency_status" readonly="1" />
+                        <field name="residency_status" readonly="1" />
                     </group>
                 </group>
 

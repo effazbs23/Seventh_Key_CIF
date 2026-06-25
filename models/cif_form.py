@@ -40,8 +40,8 @@ class ClientInformationForm(models.Model):
     last_name = fields.Char(string='Last Name', tracking=True)
     passport_no = fields.Char(string='Passport No.', tracking=True)
     passport_supporting_docs = fields.Many2many('ir.attachment', 'cif_form_passport_docs_rel', 'cif_form_id', 'attachment_id', string='Passport Supporting Documents', tracking=True)
-    emirates_no = fields.Char(string='Emirates ID Number', tracking=True)
-    emirates_id_supporting_docs = fields.Many2many('ir.attachment', 'cif_form_emirates_docs_rel', 'cif_form_id', 'attachment_id', string='Emirates ID Supporting Documents', tracking=True)
+    national_id = fields.Char(string='National ID Number', tracking=True)
+    id_supporting_docs = fields.Many2many('ir.attachment', 'cif_form_id_docs_rel', 'cif_form_id', 'attachment_id', string='ID Supporting Documents', tracking=True)
     nationality_id = fields.Many2one('res.country', string='Nationality', tracking=True)
     gender = fields.Selection([
         ('male', 'Male'),
@@ -49,9 +49,6 @@ class ClientInformationForm(models.Model):
         ('other', 'Other')
     ], string='Gender', tracking=True)
     unit_no = fields.Char(string='Unit No.', tracking=True)
-    payment_plan = fields.Many2one(
-        comodel_name='installment.option',
-        string='Payment Plan', related='source_sale_order_id.installment_option_custom', tracking=True)
 
     # === CLIENT/COMPANY ADDRESS ===
     unit_villa_no = fields.Char(string='Unit / Villa No', tracking=True)
@@ -77,10 +74,10 @@ class ClientInformationForm(models.Model):
     email_address = fields.Char(string='Alt. Email', tracking=True)
     date_of_birth = fields.Date(string='Date of Birth', tracking=True)
     source_of_income = fields.Char(string='Source of Income', tracking=True)
-    uae_residency_status = fields.Selection([
+    residency_status = fields.Selection([
         ('resident', 'Resident'),
         ('non_resident', 'Non Resident')
-    ], string='UAE Residency Status', tracking=True)
+    ], string='Residency Status', tracking=True)
     signature = fields.Binary(string='Signature Image', attachment=True)
 
     # === PHONE VERIFICATION FIELDS ===
@@ -396,17 +393,11 @@ class ClientInformationForm(models.Model):
         """
         self.ensure_one()
 
-        purchaser_line = self.env['sale.order.purchaser'].search(
-            [('cif_form_id', '=', self.id)], limit=1
-        )
-        if not purchaser_line:
-            raise UserError(_("No purchaser line is linked to this CIF form."))
-
-        sale_order = purchaser_line.sale_order_id
+        sale_order = self.source_sale_order_id
         if not sale_order:
-            raise UserError(_("The purchaser line has no associated Sale Order."))
+            raise UserError(_("No Sale Order is linked to this CIF form."))
 
-        partner = self.created_partner_id or purchaser_line.partner_id
+        partner = self.created_partner_id
         email_to = (partner.email or '').strip() if partner else ''
         if not email_to:
             raise UserError(_(
@@ -415,8 +406,8 @@ class ClientInformationForm(models.Model):
             ) % (partner.display_name if partner else ''))
 
         return self.env['cif.change.request']._build_cif_change_composer_action(
-            purchaser_line=purchaser_line,
             sale_order=sale_order,
             partner=partner,
             email_to=email_to,
+            cif_form=self,
         )
