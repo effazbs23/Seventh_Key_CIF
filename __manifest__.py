@@ -14,12 +14,19 @@
         - Document upload support (Passport, Emirates ID)
         - Integration with Sale Orders and Partners
 
-        Migrated from seventh_key_custom module for better modularity.
+        Standalone CIF module (no seventh_key_custom dependency).
     """,
     'category': 'Sales',
     'version': '18.0.1.0.0',
     'depends': [
-        'seventh_key_custom',
+        'base',
+        'sale',
+        'contacts',
+        'mail',
+        'web',
+        'website',
+        'account',
+        'sale_project',
     ],
     'data': [
         # Security
@@ -41,8 +48,10 @@
         'views/cif_form_views.xml',
         'views/cif_change_request_views.xml',
         'views/cif_request_session_views.xml',
+        'views/security_question_views.xml',
         'views/security_question_answer_views.xml',
         'wizards/cif_form_reject_reason_wizard_views.xml',
+        'wizards/send_form_wizard_views.xml',
         # 'views/phone_otp_views.xml',
         'views/email_otp_views.xml',
         'views/sale_order_views.xml',
