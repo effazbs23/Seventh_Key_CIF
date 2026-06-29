@@ -156,11 +156,11 @@ class EmailOtp(models.Model):
             company = self.env.company
 
             # Prepare email content
-            subject = "Email Verification Code - 7th Key"
+            subject = "Email Verification Code - Your Company"
             body_html = f"""
             <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
                 <div style="background-color: #1d194c; padding: 20px; text-align: center;">
-                    <h1 style="color: white; margin: 0;">7th Key</h1>
+                    <h1 style="color: white; margin: 0;">Your Company</h1>
                 </div>
                 <div style="padding: 30px; background-color: #f9f9f9;">
                     <h2 style="color: #1d194c;">Email Verification Code</h2>
@@ -180,7 +180,7 @@ class EmailOtp(models.Model):
                     <p>If you did not request this verification, please ignore this email.</p>
                     <div style="margin-top: 30px; padding-top: 20px; border-top: 1px solid #ddd;">
                         <p style="font-size: 12px; color: #666;">
-                            This is an automated message from 7th Key Client Information Form.
+                            This is an automated message from Your Company Client Information Form.
                         </p>
                     </div>
                 </div>
