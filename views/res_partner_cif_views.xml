@@ -16,6 +16,12 @@
                         <field name="cif_form_count" widget="statinfo" string="CIF Forms"/>
                     </button>
                 </div>
+                <xpath expr="//field[@name='vat']" position="after">
+                    <field name="is_re_agency"/>
+                    <field name="agent_code" invisible="not is_re_agency"/>
+                    <field name="trade_license_no" invisible="not is_re_agency"/>
+                    <field name="representative" invisible="not is_re_agency"/>
+                </xpath>
             </field>
         </record>
     </data>

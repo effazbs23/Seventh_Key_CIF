@@ -61,7 +61,7 @@ class MailComposeMessage(models.TransientModel):
         to_emails = []
         if self.partner_ids:
             to_emails += [p.email for p in self.partner_ids if p.email]
-        if self.email_to:
+        if hasattr(self, 'email_to') and self.email_to:
             to_emails += email_split(self.email_to)
         to_emails = [e.strip().lower() for e in to_emails if e.strip()]
 
