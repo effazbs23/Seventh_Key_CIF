@@ -4,3 +4,10 @@ access_cif_form_reject_reason_wizard_user,cif.form.reject.reason.wizard.user,mod
 access_cif_change_request_user,cif.change.request.user,model_cif_change_request,base.group_user,1,1,1,1
 access_cif_request_session_user,cif.request.session.user,model_cif_request_session,base.group_user,1,1,1,1
 access_email_otp_user,email.otp.user,model_email_otp,base.group_user,1,1,1,1
+access_security_question_user,security.question.user,model_security_question,base.group_user,1,1,1,1
+access_security_question_answer_user,security.question.answer.user,model_security_question_answer,base.group_user,1,1,1,1
+access_installment_option_user,installment.option.user,model_installment_option,base.group_user,1,1,1,1
+access_installment_line_user,installment.line.user,model_installment_line,base.group_user,1,1,1,1
+access_sale_order_purchaser_user,sale.order.purchaser.user,model_sale_order_purchaser,base.group_user,1,1,1,1
+access_send_form_wizard_user,send.form.wizard.user,model_send_form_wizard,base.group_user,1,1,1,1
+access_eoi_request_session_user,eoi.request.session.user,model_eoi_request_session,base.group_user,1,1,1,1
