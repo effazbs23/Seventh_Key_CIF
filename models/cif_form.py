@@ -185,28 +185,6 @@ class ClientInformationForm(models.Model):
 
         return super().write(vals)
 
-    def action_send_mobile_otp(self):
-        """Mobile OTP feature is currently disabled. Use email OTP instead."""
-        raise UserError("Mobile OTP feature is not enabled. Use email verification instead.")
-
-    def action_send_phone_otp(self):
-        """Phone OTP feature is currently disabled. Use email OTP instead."""
-        raise UserError("Phone OTP feature is not enabled. Use email verification instead.")
-
-    def action_verify_mobile_otp(self, otp_code):
-        """Mobile OTP verification is disabled."""
-        return {
-            'success': False,
-            'message': 'Mobile OTP feature is not enabled. Use email verification instead.'
-        }
-
-    def action_verify_phone_otp(self, otp_code):
-        """Phone OTP verification is disabled."""
-        return {
-            'success': False,
-            'message': 'Phone OTP feature is not enabled. Use email verification instead.'
-        }
-
     def action_send_email_otp(self):
         """Generate and send OTP for email verification"""
         if not self.email:

@@ -67,6 +67,8 @@ class SaleOrder(models.Model):
         for order in self:
             order.total_discount_amount = sum(order.order_line.mapped('discount_total'))
 
+    booking_date = fields.Date(string='Booking Date', copy=False)
+    project_id = fields.Many2one('project.project', string='Project', index=True)
     is_extra_discount_approved = fields.Boolean(string='Extra Discount Approved', default=False)
 
     # Agency / representative fields
@@ -227,9 +229,9 @@ class SaleOrder(models.Model):
             raise ValidationError(_('Invalid CIF request session.'))
 
         token = session.cif_token
-        link = f"{self._get_base_url()}/client-information-form/individual?token={token}"
+        link = f"{self.get_base_url()}/client-information-form/individual?token={token}"
         if customer_type and customer_type == 'company':
-            link = f"{self._get_base_url()}/client-information-form/company?token={token}"
+            link = f"{self.get_base_url()}/client-information-form/company?token={token}"
         return link
 
     def action_send_cif_form(self, customer_type, allowed_submissions=1):
@@ -249,8 +251,10 @@ class SaleOrder(models.Model):
 
         base_url = self.get_cif_form_url(customer_type, session=session)
 
-        if not self.agent_id or not self.agent_id.email:
-            raise UserError(_("The assigned Agent must have a valid email address."))
+        if not self.agent_id:
+            raise UserError(_("An Agent must be assigned to the Sale Order before sending the CIF form."))
+        if not self.agent_id.email:
+            raise UserError(_("The assigned Agent '%s' must have a valid email address to receive the CIF form link.") % self.agent_id.name)
 
         template = self.env.ref('bs_cif_process.email_template_cif_form')
 

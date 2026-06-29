@@ -6,7 +6,6 @@ from . import cif_request_session
 from . import email_otp
 from . import security_question
 from . import security_question_answer
-# from . import phone_otp
 from . import sale_order
 from . import sale_order_line
 from . import sale_order_purchaser

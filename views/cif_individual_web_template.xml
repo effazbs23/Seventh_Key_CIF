@@ -682,6 +682,7 @@
                                                 return tokenInput ? tokenInput.value : null;
                                             }
 
+                                            /*
                                             // Send OTP function
                                             function sendOTP(fieldType) {
                                                 const phoneInput = document.getElementById(fieldType);
@@ -749,7 +750,9 @@
                                                     }
                                                 });
                                             }
+                                            */
 
+                                            /*
                                             // Verify OTP function
                                             function verifyOTP(fieldType) {
                                                 const otpInput = document.getElementById(fieldType + '_otp_code');
@@ -819,12 +822,14 @@
                                                     }
                                                 });
                                             }
+                                            */
 
                                             // Check verification status
                                             function checkVerificationStatus() {
                                                 const token = getAccessToken();
                                                 if (!token) return;
 
+                                                /*
                                                 // Check phone verification status
                                                 ['mobile', 'phone'].forEach(fieldType => {
                                                     const currentPhone = document.getElementById(fieldType)?.value || '';
@@ -862,6 +867,7 @@
                                                         console.error('Error checking verification status:', error);
                                                     });
                                                 });
+                                                */
 
                                                 // Check email verification status
                                                 ['email', 'email_address'].forEach(fieldType => {
@@ -908,6 +914,7 @@
 
                                             // Reset verification when phone number changes
                                             document.addEventListener('DOMContentLoaded', function() {
+                                                /*
                                                 ['mobile', 'phone'].forEach(fieldType => {
                                                     const input = document.getElementById(fieldType);
                                                     if (input) {
@@ -930,6 +937,7 @@
                                                         });
                                                     }
                                                 });
+                                                */
 
                                                 // Reset verification when email changes
                                                 ['email', 'email_address'].forEach(fieldType => {
@@ -1022,6 +1030,7 @@
                                                 });
                                             }
 
+                                            /*
                                             // Verify Phone OTP function
                                             function verifyOTP(fieldType) {
                                                 const otpInput = document.getElementById(fieldType + '_otp_code');
@@ -1069,6 +1078,7 @@
                                                     showOTPError(fieldType, 'Network error. Please try again.');
                                                 });
                                             }
+                                            */
 
                                             // Verify Email OTP function
                                             function verifyEmailOTP(fieldType) {
@@ -1122,6 +1132,7 @@
                                                 });
                                             }
 
+                                            /*
                                             // Resend OTP Functions
                                             function resendOTP(fieldType) {
                                                 const token = getAccessToken();
@@ -1165,6 +1176,7 @@
                                                     resendBtn.textContent = 'Resend Code';
                                                 });
                                             }
+                                            */
 
                                             function resendEmailOTP(fieldType) {
                                                 const token = getAccessToken();

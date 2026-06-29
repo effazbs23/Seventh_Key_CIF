@@ -17,7 +17,7 @@ class SaleOrderPurchaser(models.Model):
     partner_mobile = fields.Char(string='Mobile', related='partner_id.mobile', readonly=True)
     partner_passport_no = fields.Char(string='Passport No', related='partner_id.passport_no', readonly=True)
     partner_nationality_id = fields.Many2one('res.country', string='Nationality', related='partner_id.nationality', readonly=True)
-    partner_contact_address = fields.Text(string='Contact Address', related='partner_id.contact_address', readonly=True)
+    partner_contact_address = fields.Char(string='Contact Address', related='partner_id.contact_address', readonly=True)
 
     share_percentage = fields.Float(string='Share Percentage', default=0.0)
     is_representative = fields.Boolean(string='Representative', default=False)

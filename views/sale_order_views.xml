@@ -41,17 +41,14 @@
 
             <!-- Fields after payment_term_id -->
             <xpath expr="//field[@name='payment_term_id']" position="after">
+                <field name="booking_date" />
+                <field name="share_percentage" required="1"/>
                 <field name="additional_currency_id" required="1"/>
                 <field name="third_currency_id" />
                 <field name="agent_id" />
                 <field name="agent_code" readonly="0" invisible="not agent_id"/>
                 <field name="agency_representative_name" />
                 <field name="is_spa_ready" invisible="1"/>
-            </xpath>
-
-            <!-- Share percentage -->
-            <xpath expr="//field[@name='booking_date']" position="after">
-                <field name="share_percentage" required="1"/>
             </xpath>
 
             <!-- Purchaser Details Page -->
