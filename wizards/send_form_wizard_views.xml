@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data>
+        <record id="view_send_form_wizard_form" model="ir.ui.view">
+            <field name="name">send.form.wizard.form</field>
+            <field name="model">send.form.wizard</field>
+            <field name="arch" type="xml">
+                <form string="Select Customer Type">
+                    <group>
+                        <field name="customer_type" widget="radio"/>
+                        <field name="form_type" invisible="1"/>
+                        <field name="purchasers_count" invisible="form_type != 'cif'" required="form_type != 'cif'"/>
+                    </group>
+                    <footer>
+                        <button name="action_proceed" string="Proceed" type="object" class="btn-primary" data-hotkey="q"/>
+                        <button string="Cancel" class="btn-secondary" special="cancel" data-hotkey="z"/>
+                    </footer>
+                </form>
+            </field>
+        </record>
+    </data>
+</odoo>
