@@ -1,21 +1,20 @@
 # -*- coding: utf-8 -*-
-"""
-CIF Process - Sale Order Purchaser Extensions
-
-This module extends the sale.order.purchaser model with CIF-related fields.
-CIF (Client Information Form) fields are defined here instead of in seventh_key_custom
-to maintain clean module hierarchy.
-"""
 
 from odoo import models, fields
 
 
 class SaleOrderPurchaser(models.Model):
-    """Extend sale.order.purchaser with CIF form linkage."""
+    _name = 'sale.order.purchaser'
+    _description = 'Sale Order Purchaser'
+    _rec_name = 'partner_id'
+    _order = 'sequence, id'
 
-    _inherit = 'sale.order.purchaser'
+    sequence = fields.Integer(string='Sequence', default=10)
+    sale_order_id = fields.Many2one('sale.order', string='Sale Order', required=True, ondelete='cascade', index=True)
+    partner_id = fields.Many2one('res.partner', string='Purchaser', ondelete='restrict', index=True)
+    share_percentage = fields.Float(string='Share Percentage', default=0.0)
 
-    # CIF linkage for this purchaser slot
+    # CIF linkage
     cif_form_id = fields.Many2one(
         'cif.form',
         string='CIF Form',
