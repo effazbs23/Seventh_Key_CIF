@@ -13,9 +13,63 @@ class SaleOrder(models.Model):
         ('sale', "Sales Order"),
         ('in_cif', 'In CIF'),
         ('in_eoi', 'In EOI'),
+        ('booking_sent', 'Booking Sent'),
+        ('booking_signed', 'Booking Signed'),
+        ('spa_sent', 'SPA Sent'),
+        ('spa_signed', 'SPA Signed'),
     ])
 
-    # Agent/Agency fields
+    # KYC fields
+    kyc_mail_sent = fields.Boolean(string='KYC Mail Sent', copy=False)
+    kyc_verified = fields.Boolean(string='KYC Verified', copy=False)
+    kyc_rejected = fields.Boolean(string='KYC Rejected', copy=False)
+    kyc_verification_documents_ids = fields.Many2many(
+        'ir.attachment',
+        'sale_order_kyc_docs_rel',
+        'sale_order_id',
+        'attachment_id',
+        string='KYC Verification Documents'
+    )
+
+    # Booking / SPA / EOI fields
+    booking_form_id = fields.Many2one('cif.form', string='Booking Form', copy=False)
+    spa_form_id = fields.Many2one('cif.form', string='SPA Form', copy=False)
+    eoi_form_id = fields.Many2one('cif.form', string='EOI Form', copy=False)
+    has_archived_booking = fields.Boolean(string='Has Archived Booking', copy=False)
+    has_archived_spa = fields.Boolean(string='Has Archived SPA', copy=False)
+    has_archived_eoi = fields.Boolean(string='Has Archived EOI', copy=False)
+
+    # EOI sessions
+    eoi_request_session_ids = fields.One2many(
+        'eoi.request.session',
+        'sale_order_id',
+        string='EOI Request Sessions',
+        copy=False,
+    )
+    eoi_request_session_count = fields.Integer(
+        string='EOI Request Count',
+        compute='_compute_eoi_request_session_count',
+        store=False,
+    )
+
+    def _compute_eoi_request_session_count(self):
+        for order in self:
+            order.eoi_request_session_count = len(order.eoi_request_session_ids)
+
+    # Accounting fields
+    escrow_account = fields.Many2one('account.account', string='Escrow Account')
+    registration_fees_account = fields.Many2one('account.account', string='Registration Fees Account')
+    additional_currency_id = fields.Many2one('res.currency', string='Additional Currency')
+    third_currency_id = fields.Many2one('res.currency', string='Third Currency')
+    total_discount_amount = fields.Monetary(string='Total Discount', currency_field='currency_id', compute='_compute_total_discount', store=False)
+
+    def _compute_total_discount(self):
+        for order in self:
+            order.total_discount_amount = sum(order.order_line.mapped('discount_total'))
+
+    is_extra_discount_approved = fields.Boolean(string='Extra Discount Approved', default=False)
+
+    # Agency / representative fields
     agent_id = fields.Many2one(
         'res.partner',
         string="Agency Name",
@@ -27,6 +81,13 @@ class SaleOrder(models.Model):
         readonly=False,
         store=True
     )
+    agency_representative_name = fields.Char(
+        string='Agency Representative',
+        related='agent_id.representative.name',
+        readonly=False,
+        store=True,
+    )
+    is_spa_ready = fields.Boolean(string='SPA Ready', default=False)
 
     # Share percentage
     share_percentage = fields.Float(

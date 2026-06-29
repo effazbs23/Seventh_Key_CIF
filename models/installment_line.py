@@ -30,8 +30,18 @@ class InstallmentLine(models.Model):
     ], string='Status', default='draft')
 
     def get_installment_invoice(self):
-        """Override to restrict invoice creation based on sale order state"""
+        """Create invoice for this installment line"""
         allowed_states = ('sale', 'in_cif', 'in_eoi', 'booking_sent', 'booking_signed', 'spa_sent', 'spa_signed', 'oqood_started','oqood_completed')
         if self.order_id.state not in allowed_states:
             raise UserError("An invoice can be created after the Sale Order is confirmed.")
-        return super(InstallmentLine, self).get_installment_invoice()
+        invoice = self.env['account.move'].create({
+            'move_type': 'out_invoice',
+            'partner_id': self.partner_id.id,
+            'invoice_line_ids': [(0, 0, {
+                'name': self.name,
+                'quantity': 1,
+                'price_unit': self.amount,
+            })],
+        })
+        self.invoice_ids = [(4, invoice.id)]
+        return invoice
