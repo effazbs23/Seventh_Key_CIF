@@ -10,5 +10,6 @@ from . import security_question_answer
 from . import sale_order
 from . import sale_order_purchaser
 from . import mail_compose_message
+from . import installment_option
 from . import installment_line
 from . import res_partner
