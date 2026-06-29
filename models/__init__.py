@@ -4,6 +4,7 @@ from . import cif_form
 from . import cif_change_request
 from . import cif_request_session
 from . import email_otp
+from . import security_question
 from . import security_question_answer
 # from . import phone_otp
 from . import sale_order
