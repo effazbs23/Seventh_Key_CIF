@@ -53,7 +53,6 @@
         'wizards/send_form_wizard_views.xml',
         'views/email_otp_views.xml',
         'views/sale_order_views.xml',
-        'views/sale_order_purchaser_views.xml',
         'views/res_partner_cif_views.xml',
 
         # Views - Frontend/Website Templates

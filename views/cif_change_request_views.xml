@@ -11,7 +11,7 @@
                 <field name="workflow_state"/>
                 <field name="sale_order_id"/>
                 <field name="cif_form_id"/>
-                <field name="purchaser_line_id"/>
+                <field name="partner_id"/>
                 <field name="snapshot_partner_name" string="Partner"/>
                 <field name="snapshot_partner_email" string="Email"/>
                 <field name="snapshot_share_percentage" string="Share %"/>
@@ -50,7 +50,7 @@
                         <group>
                             <field name="sale_order_id" readonly="1"/>
                             <field name="cif_form_id" readonly="1"/>
-                            <field name="purchaser_line_id" readonly="1"/>
+
                             <field name="partner_id" readonly="1"/>
                         </group>
                         <group>

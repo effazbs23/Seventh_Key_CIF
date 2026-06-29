@@ -36,13 +36,13 @@ class ResPartner(models.Model):
         'attachment_id',
         string='Passport Supporting Documents'
     )
-    emirates_no = fields.Char('Emirates ID Number')
-    emirates_id_supporting_docs = fields.Many2many(
+    national_id_no = fields.Char('National ID Number')
+    supporting_document_ids = fields.Many2many(
         'ir.attachment',
-        'res_partner_emirates_docs_rel',
+        'res_partner_supporting_docs_rel',
         'res_partner_id',
         'attachment_id',
-        string='Emirates ID Supporting Documents'
+        string='Supporting Documents'
     )
     nationality = fields.Many2one('res.country', string="Nationality")
 
@@ -61,10 +61,10 @@ class ResPartner(models.Model):
 
     # Payment/residency fields
     payment_type = fields.Selection(PAYMENT_TYPE_OPTIONS, string='Preferred Payment Type')
-    uae_residency_status = fields.Selection([
+    residency_status = fields.Selection([
         ('resident', 'Resident'),
         ('non_resident', 'Non Resident')
-    ], string='UAE Residency Status')
+    ], string='Residency Status')
 
     # Signature
     signature = fields.Binary(string="Signature", attachment=True)

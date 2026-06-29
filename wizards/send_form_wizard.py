@@ -31,11 +31,9 @@ class SendFormWizard(models.TransientModel):
             sale_order = self.env['sale.order'].browse(active_id)
 
             if self.form_type == 'cif':
-                if not self.purchasers_count or self.purchasers_count <= 0:
-                    raise ValidationError(_('Members Count must be greater than zero.'))
                 return sale_order.action_send_cif_form(
                     self.customer_type,
-                    allowed_submissions=self.purchasers_count
+                    allowed_submissions=1
                 )
 
         return {'type': 'ir.actions.act_window_close'}

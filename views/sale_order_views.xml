@@ -9,7 +9,6 @@
             <!-- CIF Technical Fields -->
             <field name="name" position="after">
                 <field name="cif_form_id" invisible="1"/>
-                <field name="sale_order_purchaser_ids" invisible="1"/>
                 <field name="kyc_mail_sent" invisible="1"/>
                 <field name="kyc_verified" invisible="1"/>
                 <field name="kyc_rejected" invisible="1"/>
@@ -30,74 +29,43 @@
                 </button>
             </xpath>
 
+            <!-- Hide standard confirm buttons until customer/KYC is verified -->
+            <xpath expr="//button[@name='action_confirm'][@id='action_confirm']" position="attributes">
+                <attribute name="invisible">1</attribute>
+            </xpath>
+            <xpath expr="//button[@name='action_confirm'][not(@id)]" position="attributes">
+                <attribute name="invisible">1</attribute>
+            </xpath>
+
+            <!-- Custom Confirm button visible only after customer verification -->
+            <xpath expr="//form//header" position="inside">
+                <button name="action_confirm"
+                        id="action_confirm_custom"
+                        string="Confirm"
+                        type="object"
+                        class="btn-primary oe_highlight"
+                        invisible="state not in ('draft', 'sent', 'in_cif') or not kyc_verified"/>
+            </xpath>
+
             <!-- CIF Send Form Button -->
             <xpath expr="//form//header" position="inside">
                 <button name="cif_form_mail"
                         string="Send CIF Form"
                         type="object"
                         class="oe_highlight"
-                        invisible="state in ('draft','sale_approved','finance_approved','approved','sent', 'rejected', 'cancel')"/>
+                        invisible="state not in ('draft', 'sent', 'in_cif') or kyc_verified"/>
             </xpath>
 
             <!-- Fields after payment_term_id -->
             <xpath expr="//field[@name='payment_term_id']" position="after">
                 <field name="booking_date" />
-                <field name="share_percentage" required="1"/>
+                <field name="share_percentage" invisible="1"/>
                 <field name="additional_currency_id" required="1"/>
                 <field name="third_currency_id" />
                 <field name="agent_id" />
                 <field name="agent_code" readonly="0" invisible="not agent_id"/>
                 <field name="agency_representative_name" />
                 <field name="is_spa_ready" invisible="1"/>
-            </xpath>
-
-            <!-- Purchaser Details Page -->
-            <xpath expr="//notebook" position="inside">
-                <page string="Purchaser Details" name="booking_form_info">
-                    <field name="sale_order_purchaser_ids">
-                        <list editable="bottom">
-                            <field name="partner_id"/>
-                            <field name="partner_email" optional="hide"/>
-                            <field name="partner_mobile" optional="hide"/>
-                            <field name="partner_passport_no" optional="hide"/>
-                            <field name="partner_nationality_id" optional="hide"/>
-                            <field name="share_percentage"/>
-                            <field name="cif_form_id" optional="hide"/>
-                        </list>
-                        <form>
-                            <group>
-                                <field name="partner_id"/>
-                                <field name="partner_email" readonly="1"/>
-                                <field name="partner_mobile" readonly="1"/>
-                                <field name="partner_passport_no" readonly="1"/>
-                                <field name="partner_nationality_id" readonly="1"/>
-                                <field name="partner_contact_address" readonly="1"/>
-                                <field name="share_percentage" required="1"/>
-                                <field name="cif_form_id" readonly="1"/>
-                            </group>
-                        </form>
-                    </field>
-                </page>
-            </xpath>
-
-            <!-- Purchaser list: representative and activity buttons -->
-            <xpath expr="//page[@name='booking_form_info']//field[@name='sale_order_purchaser_ids']//list" position="inside">
-                <button name="action_set_representative" type="object" string="Representative" class="btn-primary"
-                        confirm="Are you sure you want to set this purchaser as the Sales Order representative (Customer)?"
-                        invisible="is_representative"/>
-                <field name="is_representative" optional="hide"/>
-                <button name="action_open_activity_wizard" type="object" string="Activity" class="btn-primary"
-                        invisible="not cif_form_id"/>
-            </xpath>
-
-            <!-- Purchaser form: representative marker and activity button -->
-            <xpath expr="//page[@name='booking_form_info']//field[@name='sale_order_purchaser_ids']//form//group" position="inside">
-                <button name="action_set_representative" type="object" string="Representative" class="btn-primary"
-                        confirm="Are you sure you want to set this purchaser as the Sales Order representative (Customer)?"
-                        invisible="is_representative"/>
-                <field name="is_representative" readonly="1"/>
-                <button name="action_open_activity_wizard" type="object" string="Activity" class="btn-primary"
-                        invisible="not cif_form_id"/>
             </xpath>
 
             <!-- CIF Request Group -->

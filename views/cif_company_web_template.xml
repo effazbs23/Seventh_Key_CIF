@@ -503,17 +503,17 @@
 
                                         <!-- Dynamic fields based on UAE Residency Status -->
                                         <div class="row" id="residency_fields">
-                                            <!-- Emirates ID Row -->
+                                            <!-- National ID Row -->
                                             <div class="form-group col-lg-6 residency_field" id="emirates_id_field">
                                                 <label class="col-form-label s_website_form_label" for="emirates_id">
-                                                    Emirates ID No. <span class="s_website_form_mark resident-required"> *</span>
+                                                    National ID No. <span class="s_website_form_mark resident-required"> *</span>
                                                 </label>
                                                 <input type="text" class="form-control" name="emirates_no" id="emirates_id"
-                                                       t-att-value="existing_partner.emirates_no if is_change_mode and existing_partner else ''"/>
+                                                       t-att-value="existing_partner.national_id_no if is_change_mode and existing_partner else ''"/>
                                             </div>
                                             <div class="form-group col-lg-6 residency_field" id="emirates_id_doc_field">
                                                 <label class="col-form-label s_website_form_label" for="emirates_id_docs">
-                                                    Emirates ID Supporting Document<t t-if="not is_change_mode"><span class="s_website_form_mark resident-required"> *</span></t>
+                                                    Supporting Documents<t t-if="not is_change_mode"><span class="s_website_form_mark resident-required"> *</span></t>
                                                     <t t-if="is_change_mode"> <small class="text-muted">(Optional)</small></t>
                                                 </label>
 

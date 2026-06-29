@@ -91,33 +91,16 @@ class SaleOrder(models.Model):
     )
     is_spa_ready = fields.Boolean(string='SPA Ready', default=False)
 
-    # Share percentage
+    # Share percentage (default to 100% for the single partner)
     share_percentage = fields.Float(
         'Share Percentage',
         default=100.0,
-        help="Share percentage for this sale order. When purchaser lines exist, this is computed as sum of purchaser shares."
-    )
-
-    # Purchaser lines
-    sale_order_purchaser_ids = fields.One2many(
-        'sale.order.purchaser',
-        'sale_order_id',
-        string='Purchasers',
-        copy=False,
     )
 
     # Installment option
     installment_option_custom = fields.Many2one(
         'installment.option',
         string='Payment Plan',
-    )
-
-    # Installment lines
-    installment_line_ids = fields.One2many(
-        'installment.line',
-        'order_id',
-        string='Installment Lines',
-        copy=False,
     )
 
     # CIF Form related fields
@@ -191,7 +174,7 @@ class SaleOrder(models.Model):
 
     def _compute_has_cif_form(self):
         for order in self:
-            order.has_cif_form = any(p.cif_form_id for p in order.sale_order_purchaser_ids) or self.env['cif.form'].search([('source_sale_order_id', '=', order.id)])
+            order.has_cif_form = bool(order.cif_form_id) or bool(self.env['cif.form'].search([('source_sale_order_id', '=', order.id)]))
 
 
     def create_cif_request_session(self, customer_type, allowed_submissions=1):
@@ -283,11 +266,7 @@ class SaleOrder(models.Model):
 
     def action_view_cif_forms(self):
         self.ensure_one()
-        # CIF forms are linked per purchaser slot
-        cif_records = self.sale_order_purchaser_ids.mapped('cif_form_id')
-        if not cif_records:
-            cif_records = self.env['cif.form'].search([('source_sale_order_id', '=', self.id)])
-
+        cif_records = self.cif_form_id or self.env['cif.form'].search([('source_sale_order_id', '=', self.id)])
         if not cif_records:
             raise UserError(_("No CIF Form is linked to this Sale Order yet."))
 
@@ -342,8 +321,7 @@ class SaleOrder(models.Model):
         (individual/company) and purchasers_count.
         """
         self.ensure_one()
-        if self.share_percentage == 100:
-            raise ValidationError(_("CIF form cannot be sent when purchasers holds 100% share."))
+
         return {
             'type': 'ir.actions.act_window',
             'name': _('Select Customer Type'),

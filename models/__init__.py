@@ -8,9 +8,7 @@ from . import security_question
 from . import security_question_answer
 from . import sale_order
 from . import sale_order_line
-from . import sale_order_purchaser
 from . import mail_compose_message
 from . import installment_option
-from . import installment_line
 from . import eoi_request_session
 from . import res_partner
