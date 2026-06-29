@@ -15,6 +15,48 @@ class SaleOrder(models.Model):
         ('in_eoi', 'In EOI'),
     ])
 
+    # Agent/Agency fields
+    agent_id = fields.Many2one(
+        'res.partner',
+        string="Agency Name",
+        domain="[('is_re_agency', '=', True)]"
+    )
+    agent_code = fields.Char(
+        string="Agent ID",
+        related='agent_id.agent_code',
+        readonly=False,
+        store=True
+    )
+
+    # Share percentage
+    share_percentage = fields.Float(
+        'Share Percentage',
+        default=100.0,
+        help="Share percentage for this sale order. When purchaser lines exist, this is computed as sum of purchaser shares."
+    )
+
+    # Purchaser lines
+    sale_order_purchaser_ids = fields.One2many(
+        'sale.order.purchaser',
+        'sale_order_id',
+        string='Purchasers',
+        copy=False,
+    )
+
+    # Installment option
+    installment_option_custom = fields.Many2one(
+        'installment.option',
+        string='Payment Plan',
+    )
+
+    # Installment lines
+    installment_line_ids = fields.One2many(
+        'installment.line',
+        'order_id',
+        string='Installment Lines',
+        copy=False,
+    )
+
     # CIF Form related fields
     cif_form_id = fields.Many2one(
         'cif.form',
@@ -271,5 +313,6 @@ class SaleOrder(models.Model):
         for order in self:
             if order.state not in allowed_states:
                 raise UserError("An invoice can be created after the Sale Order is confirmed.")
-        
-        return super(SaleOrder, self).create_invoices_from_lines()
+            for line in order.installment_line_ids:
+                line.get_installment_invoice()
+        return True
