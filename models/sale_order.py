@@ -302,7 +302,6 @@ class SaleOrder(models.Model):
         return action
 
 
-    @api.returns('mail.message', lambda value: value.id)
     def message_post(self, **kwargs):
         res = super(SaleOrder, self).message_post(**kwargs)
         if res and self.env.context.get('mark_so_as_in_cif'):

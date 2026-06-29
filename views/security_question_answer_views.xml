@@ -51,7 +51,7 @@
                 <filter string="By Partner" name="filter_partner" domain="[]" context="{'group_by': 'partner_id'}"/>
                 <filter string="By CIF Form" name="filter_cif_form" domain="[]" context="{'group_by': 'cif_form_id'}"/>
 
-                <group expand="0" string="Group By">
+                <group>
                     <filter string="Security Question" name="group_question" context="{'group_by': 'question_id'}"/>
                     <filter string="Partner" name="group_partner" context="{'group_by': 'partner_id'}"/>
                     <filter string="CIF Form" name="group_cif_form" context="{'group_by': 'cif_form_id'}"/>

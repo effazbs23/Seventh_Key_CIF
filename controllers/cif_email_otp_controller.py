@@ -258,7 +258,7 @@ class CifEmailOtpController(http.Controller):
     @http.route([
         '/cif/change/send-new-email-otp',
         '/client-information-form/change/send-new-email-otp'
-    ], type='json', auth='public', methods=['POST'], csrf=False)
+    ], type='jsonrpc', auth='public', methods=['POST'], csrf=False)
     def change_cif_send_new_email_otp(self, **post):
         """
         Unified route to send OTP to new email address in Change CIF mode.
@@ -323,7 +323,7 @@ class CifEmailOtpController(http.Controller):
     @http.route([
         '/cif/change/verify-new-email-otp',
         '/client-information-form/change/verify-new-email-otp'
-    ], type='json', auth='public', methods=['POST'], csrf=False)
+    ], type='jsonrpc', auth='public', methods=['POST'], csrf=False)
     def change_cif_verify_new_email_otp(self, **post):
         """
         Unified route to verify OTP for new email address in Change CIF mode.
@@ -389,7 +389,7 @@ class CifEmailOtpController(http.Controller):
     @http.route([
         '/cif/change/resend-new-email-otp',
         '/client-information-form/change/resend-new-email-otp'
-    ], type='json', auth='public', methods=['POST'], csrf=False)
+    ], type='jsonrpc', auth='public', methods=['POST'], csrf=False)
     def change_cif_resend_new_email_otp(self, **post):
         """
         Unified route to resend OTP for new email address in Change CIF mode.

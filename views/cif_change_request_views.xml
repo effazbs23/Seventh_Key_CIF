@@ -158,7 +158,7 @@
                 <field name="email_to"/>
 
                 <filter string="Currently Locked" name="currently_locked"
-                        domain="[('security_locked_until', '!=', False), ('security_locked_until', '&gt;', datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S'))]"/>
+                        domain="[('security_locked_until', '!=', False), ('security_locked_until', '&gt;', context_today().strftime('%Y-%m-%d %H:%M:%S'))]"/>
                 <filter string="Failed Attempts" name="failed_attempts"
                         domain="[('security_attempts', '&gt;', 0)]"/>
                 <filter string="Email Not Verified" name="email_not_verified"
@@ -172,7 +172,7 @@
                 <separator/>
                 <filter string="My Requests" name="my_requests" domain="[('sent_by', '=', uid)]"/>
                 <separator/>
-                <group expand="0" string="Group By">
+                <group>
                     <filter string="State" name="group_state" context="{'group_by': 'state'}"/>
                     <filter string="Workflow State" name="group_workflow_state" context="{'group_by': 'workflow_state'}"/>
                     <filter string="Sale Order" name="group_sale_order" context="{'group_by': 'sale_order_id'}"/>

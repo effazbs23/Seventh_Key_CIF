@@ -12,3 +12,4 @@ from . import mail_compose_message
 from . import installment_option
 from . import eoi_request_session
 from . import res_partner
+from . import res_partner_title

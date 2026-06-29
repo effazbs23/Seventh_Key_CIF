@@ -50,6 +50,7 @@ class ResPartner(models.Model):
     middle_name = fields.Char(string='Middle Name')
 
     # Contact fields
+    mobile = fields.Char(string='Mobile')
     email_address = fields.Char(string='Alt. Email')
     date_of_birth = fields.Date(string='Date of Birth')
     gender = fields.Selection([

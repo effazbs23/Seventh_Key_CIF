@@ -10,3 +10,4 @@ access_installment_option_user,installment.option.user,model_installment_option,
 
 access_send_form_wizard_user,send.form.wizard.user,model_send_form_wizard,base.group_user,1,1,1,1
 access_eoi_request_session_user,eoi.request.session.user,model_eoi_request_session,base.group_user,1,1,1,1
+access_res_partner_title_user,res.partner.title.user,model_res_partner_title,base.group_user,1,1,1,1

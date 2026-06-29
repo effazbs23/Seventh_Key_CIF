@@ -17,7 +17,7 @@
         Standalone CIF module (no seventh_key_custom dependency).
     """,
     'category': 'Sales',
-    'version': '18.0.1.0.0',
+    'version': '19.0.1.0.0',
     'depends': [
         'base',
         'sale',
@@ -34,6 +34,7 @@
         'security/ir.model.access.csv',
 
         # Data & Sequences
+        'data/res_partner_title_data.xml',
         'data/cif_sequence.xml',
         'data/cif_change_request_sequence.xml',
         'data/cif_request_session_sequence.xml',
