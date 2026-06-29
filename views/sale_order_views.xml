@@ -4,37 +4,55 @@
     <record id="view_sale_order_form_cif_inherit" model="ir.ui.view">
         <field name="name">sale.order.form.cif.inherit</field>
         <field name="model">sale.order</field>
-        <field name="inherit_id" ref="seventh_key_custom.view_sale_order_form_inherit_seventh_key_custom"/>
+        <field name="inherit_id" ref="sale.view_order_form"/>
         <field name="arch" type="xml">
-            <!-- CIF Form Button and Technical Fields -->
-            <xpath expr="//button[@name='action_send_eoi_form']" position="after">
+            <!-- KYC Technical Fields & Ribbons -->
+            <field name="name" position="after">
+                <field name="kyc_mail_sent" invisible="1"/>
+                <field name="kyc_verified" invisible="1"/>
+                <field name="kyc_rejected" invisible="1"/>
+                <widget name="web_ribbon" title="KYC Mail Sent" bg_color="text-bg-warning"
+                        invisible="state not in ('sale','in_cif','in_eoi','booking_sent','booking_signed','spa_sent','spa_signed') or not kyc_mail_sent or kyc_verified == True or kyc_rejected == True"/>
+                <widget name="web_ribbon" title="KYC Verified" bg_color="text-bg-success"
+                        invisible="state not in ('sale','in_cif','in_eoi','booking_sent','booking_signed','spa_sent','spa_signed') or not kyc_verified or kyc_rejected == True"/>
+                <widget name="web_ribbon" title="KYC Rejected" bg_color="text-bg-danger"
+                        invisible="state not in ('sale','in_cif','in_eoi','booking_sent','booking_signed','spa_sent','spa_signed') or not kyc_rejected"/>
+            </field>
+
+            <!-- EOI & KYC Buttons (before action_unlock) -->
+            <xpath expr="//button[@name='action_unlock']" position="before">
+                <field name="eoi_form_id" invisible="1"/>
+                <field name="sale_order_purchaser_ids" invisible="1"/>
+                <button name="action_send_eoi_form" type="object" string="Send EOI Form" class="btn-primary" invisible="1"/>
+                <button name="action_send_kyc_mail" string="Send KYC Mail" type="object" class="oe_stat_button"/>
+                <button name="action_kyc_verified" string="KYC Verified" type="object" class="oe_stat_button"/>
+                <button name="action_kyc_reject" string="KYC Rejected" type="object" class="oe_stat_button"/>
+            </xpath>
+
+            <!-- Stat Buttons (Booking, SPA, EOI, CIF) -->
+            <xpath expr="//sheet/div[@name='button_box']" position="inside">
+                <field name="eoi_request_session_count" invisible="1"/>
+                <field name="cif_request_session_count" invisible="1"/>
                 <field name="cif_form_id" invisible="1"/>
-                <button name="cif_form_mail"
-                        string="Send CIF Form"
-                        type="object"
-                        class="oe_highlight"
-                        invisible="state in ('draft','sale_approved','finance_approved','approved','sent', 'rejected', 'cancel')"/>
-            </xpath>
-
-            <xpath expr="//button[@name='action_send_kyc_mail']" position="attributes">
-                <attribute name="invisible">(state not in ('sale','in_cif')) or (state in ('sale','in_cif') and (kyc_verified == True or kyc_rejected == True))</attribute>
-            </xpath>
-
-            <xpath expr="//button[@name='action_kyc_verified']" position="attributes">
-                <attribute name="invisible">(state not in ('sale','in_cif')) or (state in ('sale','in_cif') and (kyc_verified == True or kyc_rejected == True))</attribute>
-            </xpath>
-
-            <xpath expr="//button[@name='action_kyc_reject']" position="attributes">
-                <attribute name="invisible">(state not in ('sale','in_cif')) or (state in ('sale','in_cif') and (kyc_verified == True or kyc_rejected == True))</attribute>
-            </xpath>
-
-            <!-- CIF Stat Buttons -->
-            <xpath expr="//button[@name='action_view_eoi_forms']" position="after">
+                <button name="action_view_booking_form" type="object" class="oe_stat_button"
+                    icon="fa-pencil-square-o" string="Booking Form"
+                    invisible="not booking_form_id and not has_archived_booking" />
+                <button name="action_view_spa_form" type="object" class="oe_stat_button"
+                    icon="fa-pencil-square-o" string="SPA Form"
+                    invisible="not spa_form_id and not has_archived_spa" />
+                <button name="action_view_eoi_forms" type="object" class="oe_stat_button" icon="fa-file-text-o" string="EOI Form"
+                    invisible="not eoi_form_id and not has_archived_eoi"/>
+                <button class="oe_stat_button"
+                        name="action_view_eoi_request_sessions"
+                        type="object" icon="fa-paper-plane"
+                        invisible="eoi_request_session_count == 0">
+                    <field name="eoi_request_session_count" widget="statinfo" string="EOI Requests"/>
+                </button>
                 <button class="oe_stat_button"
                         name="action_view_cif_forms"
                         type="object" widget="statinfo"
                         icon="fa-id-card-o" string="CIF Form"
-                        invisible="not has_cif_form"/>
+                        invisible="not cif_form_id"/>
                 <button class="oe_stat_button"
                         name="action_view_cif_request_sessions"
                         type="object" icon="fa-link"
@@ -43,22 +61,159 @@
                 </button>
             </xpath>
 
-            <!-- CIF Field in Purchaser Details -->
-            <xpath expr="//page[@name='booking_form_info']//field[@name='sale_order_purchaser_ids']//list//field[@name='share_percentage']" position="after">
-                <field name="cif_form_id" optional="hide"/>
+            <!-- CIF Send Form Button -->
+            <xpath expr="//button[@name='action_send_eoi_form']" position="after">
+                <button name="cif_form_mail"
+                        string="Send CIF Form"
+                        type="object"
+                        class="oe_highlight"
+                        invisible="state in ('draft','sale_approved','finance_approved','approved','sent', 'rejected', 'cancel')"/>
             </xpath>
 
-            <!-- CIF Field in Purchaser Form -->
-            <xpath expr="//page[@name='booking_form_info']//field[@name='sale_order_purchaser_ids']//form//group//field[@name='share_percentage']" position="after">
-                <field name="cif_form_id" readonly="1"/>
+            <!-- KYC Button Visibility -->
+            <xpath expr="//button[@name='action_send_kyc_mail']" position="attributes">
+                <attribute name="invisible">(state not in ('sale','in_cif')) or (state in ('sale','in_cif') and (kyc_verified == True or kyc_rejected == True))</attribute>
+            </xpath>
+            <xpath expr="//button[@name='action_kyc_verified']" position="attributes">
+                <attribute name="invisible">(state not in ('sale','in_cif')) or (state in ('sale','in_cif') and (kyc_verified == True or kyc_rejected == True))</attribute>
+            </xpath>
+            <xpath expr="//button[@name='action_kyc_reject']" position="attributes">
+                <attribute name="invisible">(state not in ('sale','in_cif')) or (state in ('sale','in_cif') and (kyc_verified == True or kyc_rejected == True))</attribute>
             </xpath>
 
-            <!-- CIF Activity Button Condition -->
-            <xpath expr="//page[@name='booking_form_info']//field[@name='sale_order_purchaser_ids']//form//group//button[@name='action_open_activity_wizard']" position="attributes">
-                <attribute name="invisible">not cif_form_id</attribute>
+            <!-- Button visibility adjustments -->
+            <xpath expr="//button[@id='send_by_email_primary']" position="attributes">
+                <attribute name="invisible">0</attribute>
+            </xpath>
+            <xpath expr="//button[@id='send_by_email']" position="attributes">
+                <attribute name="invisible">0</attribute>
+            </xpath>
+            <xpath expr="//button[@name='action_unlock']" position="attributes">
+                <attribute name="invisible">not locked</attribute>
+            </xpath>
+            <xpath expr="//button[@id='create_invoice']" position="attributes">
+                <attribute name="invisible">1</attribute>
+            </xpath>
+            <xpath expr="//button[@id='create_invoice_percentage']" position="attributes">
+                <attribute name="invisible">1</attribute>
+            </xpath>
+            <xpath expr="//button[@name='action_preview_sale_order']" position="attributes">
+                <attribute name="invisible">0</attribute>
+            </xpath>
+            <xpath expr="//button[@name='action_cancel']" position="attributes">
+                <attribute name="invisible">state not in ['draft', 'sent', 'approved', 'sale'] or not id</attribute>
             </xpath>
 
-            <!-- CIF Request Group - After the group containing payment_term_id -->
+            <!-- Additional fields in sales_person group -->
+            <xpath expr="//page[@name='other_information']//group[@name='sales_person']" position="inside">
+                <field name="escrow_account"/>
+                <field name="registration_fees_account"/>
+            </xpath>
+
+            <!-- Product domain restriction -->
+            <xpath expr="//field[@name='order_line']//field[@name='product_template_id']" position="attributes">
+                <attribute name="domain">[('sale_ok', '=', True), ('status', '!=', 'issued')]</attribute>
+            </xpath>
+
+            <!-- Fields after payment_term_id -->
+            <xpath expr="//field[@name='payment_term_id']" position="after">
+                <field name="additional_currency_id" required="1"/>
+                <field name="third_currency_id" />
+                <field name="agent_id" />
+                <field name="agent_code" readonly="0" invisible="not agent_id"/>
+                <field name="agency_representative_name" />
+                <field name="is_spa_ready" invisible="1"/>
+                <field name="kyc_verification_documents_ids" invisible="state not in ('sale','in_cif','in_eoi','booking_sent','booking_signed','spa_sent','spa_signed', 'oqood_started', 'oqood_completed', 'rejected', 'cancel')" widget="many2many_binary" readonly="kyc_verified"/>
+            </xpath>
+
+            <!-- Share percentage -->
+            <xpath expr="//field[@name='booking_date']" position="after">
+                <field name="share_percentage" required="1"/>
+            </xpath>
+
+            <!-- Extra discount indicator -->
+            <xpath expr="//field[@name='project_id']" position="before">
+                <field name="is_extra_discount_approved" readonly="1"/>
+            </xpath>
+
+            <!-- Additional header buttons -->
+            <xpath expr="//form//header" position="inside">
+                <button name="booking_form_mail" string="Send Booking Form" type="object"
+                    class="btn btn-secondry" invisible="1" />
+                <button name="action_create_booking_form" string="Create Booking Form" type="object" class="btn btn-secondary" invisible="booking_form_id or state not in ('sale','in_cif','in_eoi')" />
+                <button name="action_create_spa_form" string="Create SPA Form" type="object" invisible="spa_form_id != False or not is_spa_ready" class="btn btn-secondary" />
+                <button name="action_create_eoi_record" string="Create EOI" type="object" class="btn btn-secondary"
+                    invisible="eoi_form_id != False"/>
+            </xpath>
+
+            <!-- Unit label -->
+            <xpath expr="//page[@name='order_lines']//field[@name='order_line']//list//field[@name='product_template_id']" position="attributes">
+                <attribute name="string">Unit</attribute>
+            </xpath>
+
+            <!-- Additional currency amount -->
+            <xpath expr="//page[@name='order_lines']//field[@name='order_line']//list//field[@name='price_unit']" position="after">
+                <field name="amount_in_additional_currency" optional="hide" invisible="order_id.additional_currency_id == False"/>
+            </xpath>
+
+            <!-- Total discount -->
+            <xpath expr="//field[@name='tax_totals']" position="before">
+                <div class="d-flex justify-content-between oe_subtotal_footer_separator">
+                    <span style="white-space: nowrap;">Total Discount:</span>
+                    <field name="total_discount_amount" nolabel="1" widget="monetary" options="{'currency_field': 'currency_id'}"/>
+                </div>
+            </xpath>
+
+            <!-- Purchaser Details Page -->
+            <xpath expr="//notebook" position="inside">
+                <page string="Purchaser Details" name="booking_form_info">
+                    <field name="sale_order_purchaser_ids">
+                        <list editable="bottom">
+                            <field name="partner_id"/>
+                            <field name="partner_email" optional="hide"/>
+                            <field name="partner_mobile" optional="hide"/>
+                            <field name="partner_passport_no" optional="hide"/>
+                            <field name="partner_nationality_id" optional="hide"/>
+                            <field name="share_percentage"/>
+                            <field name="cif_form_id" optional="hide"/>
+                        </list>
+                        <form>
+                            <group>
+                                <field name="partner_id"/>
+                                <field name="partner_email" readonly="1"/>
+                                <field name="partner_mobile" readonly="1"/>
+                                <field name="partner_passport_no" readonly="1"/>
+                                <field name="partner_nationality_id" readonly="1"/>
+                                <field name="partner_contact_address" readonly="1"/>
+                                <field name="share_percentage" required="1"/>
+                                <field name="cif_form_id" readonly="1"/>
+                            </group>
+                        </form>
+                    </field>
+                </page>
+            </xpath>
+
+            <!-- Purchaser list: representative marker -->
+            <xpath expr="//page[@name='booking_form_info']//field[@name='sale_order_purchaser_ids']//list" position="inside">
+                <button name="action_set_representative" type="object" string="Representative" class="btn-primary"
+                        confirm="Are you sure you want to set this purchaser as the Sales Order representative (Customer)?"
+                        invisible="is_representative"/>
+                <field name="is_representative" optional="hide"/>
+                <button name="action_open_activity_wizard" type="object" string="Activity" class="btn-primary"
+                        invisible="not cif_form_id"/>
+            </xpath>
+
+            <!-- Purchaser form: representative marker and activity button -->
+            <xpath expr="//page[@name='booking_form_info']//field[@name='sale_order_purchaser_ids']//form//group" position="inside">
+                <button name="action_set_representative" type="object" string="Representative" class="btn-primary"
+                        confirm="Are you sure you want to set this purchaser as the Sales Order representative (Customer)?"
+                        invisible="is_representative"/>
+                <field name="is_representative" readonly="1"/>
+                <button name="action_open_activity_wizard" type="object" string="Activity" class="btn-primary"
+                        invisible="not cif_form_id"/>
+            </xpath>
+
+            <!-- CIF Request Group -->
             <xpath expr="//field[@name='payment_term_id']/ancestor::group[1]" position="after">
                 <group string="CIF Request" name="cif_request_group" invisible="not cif_request_session_ids">
                     <field name="cif_mail_sent_to" readonly="1" invisible="1"/>
@@ -67,8 +222,17 @@
                     <field name="cif_submitted_count"/>
                 </group>
             </xpath>
+        </field>
+    </record>
 
+    <record id="view_order_form_sale_project_inherit" model="ir.ui.view">
+        <field name="name">sale.order.form.sale.project</field>
+        <field name="model">sale.order</field>
+        <field name="inherit_id" ref="sale_project.view_order_form_inherit_sale_project"/>
+        <field name="arch" type="xml">
+            <xpath expr="//field[@name='project_id']" position="attributes">
+                <attribute name="required">1</attribute>
+            </xpath>
         </field>
     </record>
 </odoo>
-

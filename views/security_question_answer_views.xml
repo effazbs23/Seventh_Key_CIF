@@ -1,45 +1,78 @@
 <?xml version='1.0' encoding='utf-8'?>
 <odoo>
-    <!-- Extend security.question.answer views to include cif_form_id field -->
-
-    <record id="view_security_question_answer_list_cif" model="ir.ui.view">
-        <field name="name">security.question.answer.list.cif</field>
+    <!-- Base views for security.question.answer -->
+    <record id="view_security_question_answer_list" model="ir.ui.view">
+        <field name="name">security.question.answer.list</field>
         <field name="model">security.question.answer</field>
-        <field name="inherit_id" ref="seventh_key_custom.view_security_question_answer_list"/>
         <field name="arch" type="xml">
-            <list position="inside">
+            <list>
+                <field name="sequence" widget="handle"/>
+                <field name="question_id"/>
+                <field name="answer"/>
+                <field name="partner_id"/>
                 <field name="cif_form_id"/>
             </list>
         </field>
     </record>
 
-    <record id="view_security_question_answer_form_cif" model="ir.ui.view">
-        <field name="name">security.question.answer.form.cif</field>
+    <record id="view_security_question_answer_form" model="ir.ui.view">
+        <field name="name">security.question.answer.form</field>
         <field name="model">security.question.answer</field>
-        <field name="inherit_id" ref="seventh_key_custom.view_security_question_answer_form"/>
         <field name="arch" type="xml">
-            <field name="partner_id" position="after">
-                <field name="cif_form_id" readonly="cif_form_id"/>
-            </field>
+            <form string="Security Question Answer">
+                <sheet>
+                    <group>
+                        <group>
+                            <field name="sequence"/>
+                            <field name="question_id" readonly="question_id"/>
+                            <field name="answer"/>
+                        </group>
+                        <group>
+                            <field name="partner_id" readonly="partner_id"/>
+                            <field name="cif_form_id" readonly="cif_form_id"/>
+                        </group>
+                    </group>
+                </sheet>
+            </form>
         </field>
     </record>
 
-    <record id="view_security_question_answer_search_cif" model="ir.ui.view">
-        <field name="name">security.question.answer.search.cif</field>
+    <record id="view_security_question_answer_search" model="ir.ui.view">
+        <field name="name">security.question.answer.search</field>
         <field name="model">security.question.answer</field>
-        <field name="inherit_id" ref="seventh_key_custom.view_security_question_answer_search"/>
         <field name="arch" type="xml">
-            <field name="partner_id" position="after">
+            <search string="Security Question Answers">
+                <field name="question_id"/>
+                <field name="answer"/>
+                <field name="partner_id"/>
                 <field name="cif_form_id"/>
-            </field>
-            <filter name="filter_partner" position="after">
+
+                <filter string="By Security Question" name="filter_question" domain="[]" context="{'group_by': 'question_id'}"/>
+                <filter string="By Partner" name="filter_partner" domain="[]" context="{'group_by': 'partner_id'}"/>
                 <filter string="By CIF Form" name="filter_cif_form" domain="[]" context="{'group_by': 'cif_form_id'}"/>
-            </filter>
-            <filter name="group_partner" position="after">
-                <filter string="CIF Form" name="group_cif_form" context="{'group_by': 'cif_form_id'}"/>
-            </filter>
+
+                <group expand="0" string="Group By">
+                    <filter string="Security Question" name="group_question" context="{'group_by': 'question_id'}"/>
+                    <filter string="Partner" name="group_partner" context="{'group_by': 'partner_id'}"/>
+                    <filter string="CIF Form" name="group_cif_form" context="{'group_by': 'cif_form_id'}"/>
+                </group>
+            </search>
         </field>
     </record>
 
-</odoo>
+    <record id="action_security_question_answer" model="ir.actions.act_window">
+        <field name="name">Security Question Answers</field>
+        <field name="res_model">security.question.answer</field>
+        <field name="view_mode">list,form</field>
+        <field name="context">{'search_default_group_partner': 1}</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">No security question answers found.</p>
+        </field>
+    </record>
 
+    <menuitem id="menu_security_question_answers"
+              name="Security Question Answers"
+              parent="sale.sale_menu_root"
+              action="action_security_question_answer"
+              sequence="45"/>
+</odoo>

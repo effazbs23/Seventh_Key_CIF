@@ -13,7 +13,7 @@
                             <div class="col-lg-10 mx-auto">
                                 <div class="d-flex justify-content-between align-items-center mb-4">
                                     <!-- Increased logo height from 70px to 110px for consistency -->
-                                    <img src="/seventh_key_custom/static/src/img/7th-key.png" alt="Logo"
+                                    <img src="/bs_cif_process/static/src/img/7th-key.png" alt="Logo"
                                          style="height:110px; width:auto;"/>
                                 </div>
 

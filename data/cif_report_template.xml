@@ -15,7 +15,7 @@
                                             <h3 style="font-weight: bolder;">Client Information Form</h3>
                                         </td>
                                         <td class="px-2" style="width: 30%; text-align: end;">
-                                            <img src="/seventh_key_custom/static/src/img/7th-key.png"
+                                            <img src="/bs_cif_process/static/src/img/7th-key.png"
                                                  alt="Seventh Key Gateway Logo"
                                                  style="width: 140px; height: 140px; float: inline-end;"/>
                                         </td>
