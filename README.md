@@ -1,131 +1,86 @@
-# BS CIF Process
+# Customer Information Form (CIF) Workflow & Mailing Setup Guide
 
-**Version:** 18.0.1.0.0 | **License:** LGPL-3 | **Category:** Sales
+This document describes the simplified, country-independent **Client Information Form (CIF)** workflow and provides step-by-step instructions for configuring mailing functionality in Odoo.
 
-## Overview
+---
 
-The BS CIF Process module manages the complete **Client Information Form (CIF)** workflow for real estate sales. It provides web-based forms for individual and company clients to submit their KYC information, including identity document uploads, signature capture, email OTP verification, and security-question-based identity verification.
+## 1. Core Workflow Overview
 
-## Key Features
+The CIF workflow is integrated directly with Odoo **Sale Orders** and **Contacts** (Partners) to ensure that customer KYC (Know Your Customer) information is collected, verified, and approved before a sale is finalized.
 
-- **Individual & Company CIF Forms** — Public-facing web forms with token-based access for customers to submit their information.
-- **Email OTP Verification** — 6-digit OTP sent via email to verify primary and alternate email addresses before submission.
-- **Security Question Verification** — Customers configure 3 security questions during initial CIF submission; these must be answered correctly in the Change CIF flow.
-- **CIF Change Request Workflow** — A multi-step, token-gated process (email verification → security questions → form access → submission) allowing customers to update their CIF data via a secure public link.
-- **CIF Request Session Management** — Token-based access with configurable submission quotas and atomic consumption to prevent over-submission.
-- **Document Upload Support** — Passport and Emirates ID supporting documents with multiple file upload.
-- **Signature Capture** — Draw or upload signature images during form submission.
-- **Sale Order Integration** — CIF forms are linked to sale orders via purchaser slots; the sale order moves to an `in_cif` state during collection.
-- **Multi-Company Security Rules** — Record rules scoped to `company_ids` for multi-company isolation.
-- **Agent/Agency Tracking** — Automatically populates agent details on the CIF form from the sale order's assigned agent.
+```mermaid
+graph TD
+    A[Draft/Sent Sale Order] --> B[Send CIF Form Button]
+    B --> C[Send Wizard: Select Customer Type]
+    C --> D[Email Sent to Agency with Secure Link]
+    D --> E[Public Web Form: Client Fills Data & Uploads Documents]
+    E --> F[CIF Form Created & Linked to Sale Order]
+    F --> G[Salesperson Reviews in Backend]
+    G -->|Accept| H[KYC Verified & Confirm Button Visible]
+    G -->|Reject| I[KYC Rejected]
+    H --> J[Confirm Sale Order]
+```
 
-## Module Structure
+### Key Rules of the Workflow
+1. **Send CIF First**: When creating a new sale, the salesperson must send the CIF form request first. The standard Odoo **Confirm** button is hidden until the customer has been verified.
+2. **Confirm Button Visibility**: The custom **Confirm** button is displayed on the Sale Order *only* when the `kyc_verified` field is `True`.
+3. **Automatic Sync**: 
+   * When a public CIF form is submitted, it automatically links to the Sale Order and the Customer's partner record is updated with the submitted details.
+   * Accepting a CIF form (`action_set_accepted`) marks the linked Sale Order's KYC status as verified (`kyc_verified = True`, `kyc_rejected = False`).
+   * Rejecting a CIF form (`action_set_rejected`) marks the linked Sale Order's KYC status as rejected (`kyc_verified = False`, `kyc_rejected = True`).
 
-| Path | Description |
-|------|-------------|
-| `models/cif_form.py` | Core `cif.form` model — all CIF fields (personal info, documents, verification flags) and workflow actions (accept/reject/send change request) |
-| `models/cif_change_request.py` | `cif.change.request` model — token-gated multi-step change workflow with step tokens, email OTP, security questions, and snapshot tracking |
-| `models/cif_request_session.py` | `cif.request.session` model — token generation, submission quotas, atomic slot consumption via `SELECT ... FOR UPDATE` |
-| `models/email_otp.py` | `email.otp` model — 6-digit OTP generation, verification, resend with 60s cooldown, and expiry (2 min) |
-| `models/security_question_answer.py` | Inherits `security.question.answer` to add `cif_form_id` linkage |
-| `models/sale_order.py` | Extends `sale.order` with CIF states (`in_cif`), session tracking, CIF form URL generation, and send action |
-| `models/sale_order_purchaser.py` | Extends `sale.order.purchaser` with `cif_form_id` linkage |
-| `models/res_partner.py` | Extends `res.partner` with `cif_form_count` smart button |
-| `models/mail_compose_message.py` | Universal post-send callback for CIF change request creation after email send |
-| `models/installment_line.py` | Extends `installment.line` to allow invoice creation in CIF/EOI/booking states |
-| `models/utils.py` | Shared constants (`PAYMENT_TYPE_OPTIONS`) |
-| `controllers/cif_controller.py` | All public HTTP routes for individual/company CIF submission and Change CIF workflow (1212 lines) |
-| `controllers/cif_email_otp_controller.py` | AJAX endpoints for email OTP send/verify/resend/status (new CIF and Change CIF) |
-| `wizards/cif_form_reject_reason_wizard.py` | Transient model for rejection reason input |
-| `views/` | 15+ view files including backend tree/form views, web portal templates, and QWeb report templates |
-| `static/src/js/` | Frontend JavaScript for residency toggle, multiple file upload, and security question validation |
-| `security/` | Record rules (multi-company) and model access CSV |
+---
 
-## Dependencies
+## 2. CIF Change Request Workflow
 
-- `seventh_key_custom` — A custom module that provides:
-  - `sale.order.purchaser` model (purchaser slots on sale orders)
-  - `installment.option` and `installment.line` models
-  - `security.question` and `security.question.answer` models
-  - Custom fields on `sale.order`: `share_percentage`, `agent_code`, `agent_id.representative`, custom states (`in_cif`, `in_eoi`, `booking_sent`, `booking_signed`, `spa_sent`, `spa_signed`, `oqood_started`, `oqood_completed`)
-  - Custom fields on `res.partner`: `agent_code`, `trade_license_no`, `representative`, `middle_name`, `email_address`, `payment_type`, `passport_no`, `emirates_no`, `uae_residency_status`, `source_of_income`, `signature`
-  - `send.form.wizard` transient model
+If a customer's submitted details need correction or updating post-submission:
 
-- Standard Odoo modules: `sale`, `mail`, `web`, `website`
+1. **Initiation**: The salesperson clicks **Send CIF Request** (Change Request) from the Odoo backend `cif.form` record.
+2. **Secure Link Generation**: Odoo generates a secure token and sends an email containing a custom update link.
+3. **Public Step-Verification**:
+   * **Step 1: Email Verification**: The recipient must input their registered email address to receive a single-use Email OTP.
+   * **Step 2: Security Questions**: After validating the OTP, the recipient must correctly answer the security questions configured on their profile.
+   * **Step 3: Update Data**: Once verified, the recipient is granted temporary access to update their profile and supporting documents (Passport, National ID, etc.).
 
-## Can This Run in Odoo 18 Community Edition?
+---
 
-**Yes, `bs_cif_process` itself can — it has zero Enterprise-only dependencies.**
+## 3. Mailing Setup Instructions
 
-However, its sole dependency `seventh_key_custom` **cannot** run on CE without modification, because it inherits models from Odoo Enterprise `sign` and `documents` modules. This makes the full stack (`bs_cif_process` + `seventh_key_custom`) require Enterprise.
+To send CIF forms and update requests successfully, both Odoo's outgoing mail servers and the specific contact records must be configured correctly.
 
-### Why `bs_cif_process` Works on CE
+### Step A: Configure Odoo Outgoing Mail Server
+1. Log in to Odoo with **Administrator** privileges.
+2. Go to **Settings** > **General Settings**.
+3. Under the **Discuss** / **Email** section, activate **Custom Email Servers** and click on **Outgoing Mail Servers** (or search for `Outgoing Mail Servers` in the Settings search bar).
+4. Click **New** (or **Create**) and configure your SMTP server:
+   * **Description**: e.g., `SMTP Server`
+   * **Connection Security**: `SSL/TLS` or `STARTTLS` (recommended)
+   * **SMTP Server**: e.g., `smtp.gmail.com` or your corporate SMTP domain.
+   * **SMTP Port**: `465` (for SSL) or `587` (for TLS).
+   * **Username**: Your sending email address (e.g., `ce@yourcompany.com`).
+   * **Password**: Your email account password or an App Password (if using 2FA like Gmail/Office365).
+5. Click **Test Connection**. Ensure it returns a success message.
 
-The `bs_cif_process` module exclusively uses:
-- `mail.thread`, `mail.activity.mixin` ✓
-- `website` controllers with `auth='public'` ✓
-- QWeb templates for web forms ✓
-- `ir.attachment` for file uploads ✓
-- `ir.sequence` for auto-numbering ✓
-- Standard `res.partner`, `sale.order`, `mail.compose.message` ✓
-- Multi-company record rules ✓
-- Standard Python libs: `pytz`, `hashlib`, `secrets`, `uuid`, `base64`, `json`, `re`, `logging` ✓
-- `markupsafe` (bundled with Odoo) ✓
+### Step B: Setup Agency and Agent Details on Sale Orders
+The CIF wizard requires a valid Agency partner record and email to deliver the form.
 
-This module **does not** reference `sign.*`, `documents.*`, or any other Enterprise-only model or XML ID.
+1. **Mark Contacts as Agencies**:
+   * Go to the **Contacts** application.
+   * Open or create the contact representing the Real Estate Agency.
+   * Check the **RE Agency** checkbox (visible next to the Tax ID/VAT field).
+   * Enter the **Email** address (e.g., the Agency's email) and save the record.
+2. **Assign the Agency to the Sale Order**:
+   * Open the target **Sale Order**.
+   * In the **Agency Name** field, select the newly configured Agency.
+   * The associated **Agent ID** (Agent Code) and **Agency Representative** details will automatically populate.
+3. **Ensure Salesperson Email**:
+   * The Odoo User assigned as the Salesperson on the Sale Order must have a valid email address configured on their User profile so they can receive copy/chatter notifications when the form is submitted.
 
-### Why `seventh_key_custom` (the Dependency) Requires Enterprise
+### Step C: Define base URL Parameter (For Public Links)
+To ensure the public link generated in the emails uses your correct public domain name instead of `localhost`:
 
-| File | Enterprise Model/XML ID | Module | Impact |
-|------|------------------------|--------|--------|
-| `models/sign_template.py` | `sign.template` (inherit) | `sign` (Enterprise) | Fails at model load |
-| `models/sign_request.py` | `sign.request` (inherit) | `sign` (Enterprise) | Fails at model load |
-| `models/sign_item.py` | `sign.item` (inherit) | `sign` (Enterprise) | Fails at model load |
-| `models/documents_document.py` | `documents.document` (inherit) | `documents` (Enterprise) | Fails at model load |
-| `wizards/sign_send_request.py` | `sign.send.request` (inherit) | `sign` (Enterprise) | Fails at model load |
-| `controllers/eoi_controller.py` | XML ID `sign.sign_item_type_signature` | `sign` (Enterprise) | Runtime error |
-| `controllers/eoi_controller.py` | XML ID `sign.sign_item_role_customer` | `sign` (Enterprise) | Runtime error |
-| `wizards/sign_send_request.py` | XML ID `sign.sign_item_role_user` | `sign` (Enterprise) | Runtime error |
-
-These **5 model inheritances** and **3 XML ID references** make `seventh_key_custom` incompatible with CE.
-
-### Workaround: Run `bs_cif_process` on CE
-
-To run `bs_cif_process` on Odoo 18 CE, create a lightweight adapter module (instead of depending on `seventh_key_custom`) that provides only what `bs_cif_process` needs — none of which requires Enterprise:
-
-**Models to define in the adapter:**
-| Model | Purpose |
-|-------|---------|
-| `sale.order.purchaser` | Purchaser slots on sale orders, linked to CIF forms and partners |
-| `installment.option` | Payment plan options for sale orders |
-| `installment.line` | Installment lines with invoice creation |
-| `security.question` | Security question definitions |
-| `security.question.answer` | User-provided security answers |
-| `send.form.wizard` | Transient wizard for customer type selection |
-
-**Custom fields on `sale.order`:**
-| Field | Purpose |
-|-------|---------|
-| `share_percentage` (Float) | Remaining share validation |
-| `purchasers_count` (Integer) | Allowed submission count |
-| `sale_order_purchaser_ids` (One2many) | Purchaser slot management |
-| `installment_option_custom` (Many2one → `installment.option`) | Payment plan |
-
-**Custom fields on `res.partner`:**
-| Field | Purpose |
-|-------|---------|
-| `middle_name` (Char) | Individual name |
-| `email_address` (Char) | Alternate email |
-| `passport_no` (Char) | Identity document |
-| `emirates_no` (Char) | Identity document |
-| `payment_type` (Selection) | Preferred payment type |
-| `uae_residency_status` (Selection) | Resident/non-resident |
-| `source_of_income` (Char) | Income source |
-| `signature` (Binary) | Signature image |
-| `security_answer_ids` (One2many) | Security answers |
-
-**Custom `sale.order` states to add:** `in_cif`, `in_eoi`.
-
-(The other states — `booking_sent`, `booking_signed`, `spa_sent`, `spa_signed`, `oqood_started`, `oqood_completed` — are not referenced by `bs_cif_process`.)
-
-This adapter module depends on `contacts`, `sale`, `account`, and `website` — all CE — and removes the transitive Enterprise dependency entirely.
+1. Activate **Developer Mode** in Odoo.
+2. Go to **Settings** > **Technical** > **Parameters** > **System Parameters**.
+3. Find the parameter key: `web.base.url`.
+4. Update the value to your public domain (e.g., `https://yourcompany-cif.yourcompany.com` or your test server URL).
+5. Save the parameter.
